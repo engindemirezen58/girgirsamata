@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>MemeWar Admin</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0d0d0f;color:#f0f0f5;font-family:Inter,sans-serif;padding:32px 20px}
+h1{font-size:2rem;color:#ffcc00;margin-bottom:8px}
+h2{font-size:1.1rem;color:#00e5ff;margin:24px 0 12px}
+.card{background:#22222a;border:1px solid #2e2e3a;border-radius:12px;padding:24px;margin-bottom:20px}
+.drop-zone{border:2px dashed #2e2e3a;border-radius:12px;padding:48px;text-align:center;cursor:pointer;transition:.2s;color:#888}
+.drop-zone:hover,.drop-zone.drag{border-color:#ff3b6e;color:#ff3b6e}
+.btn{padding:10px 22px;border-radius:8px;border:none;font-weight:700;cursor:pointer;transition:.15s}
+.btn:hover{filter:brightness(1.1)}
+.btn-red{background:#ff3b6e;color:#fff}
+.btn-yellow{background:#ffcc00;color:#111}
+.meme-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-top:12px}
+.meme-item{background:#18181c;border:1px solid #2e2e3a;border-radius:10px;overflow:hidden;position:relative}
+.meme-item img{width:100%;height:120px;object-fit:cover}
+.meme-item .info{padding:8px 10px;font-size:.78rem;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meme-item .del{position:absolute;top:6px;right:6px;background:#ff3b6e;color:#fff;border:none;border-radius:6px;padding:2px 8px;cursor:pointer;font-size:.75rem}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:.7rem;font-weight:700;margin-left:6px}
+.badge-gif{background:#a78bfa;color:#fff}
+.badge-img{background:#34d399;color:#111}
+input[type=file]{display:none}
+progress{width:100%;height:8px;border-radius:4px;margin-top:8px;display:none}
+#msg{margin-top:10px;font-size:.9rem;color:#34d399}
+</style>
+</head>
+<body>
+<h1>🎛️ MemeWar Admin</h1>
+<p style="color:#888;margin-bottom:16px">Meme kütüphanesini buradan yönet</p>
+
+<div class="card">
+  <h2>📤 Meme Yükle</h2>
+  <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+    <div style="font-size:2.5rem;margin-bottom:8px">🖼️</div>
+    <div><b>Tıkla</b> veya dosyaları buraya sürükle</div>
+    <div style="font-size:.8rem;margin-top:6px">JPG, PNG, GIF, WEBP — max 20MB — çoklu seçim desteklenir</div>
+  </div>
+  <input type="file" id="fileInput" accept=".jpg,.jpeg,.png,.gif,.webp" multiple/>
+  <progress id="prog" max="100" value="0"></progress>
+  <div id="msg"></div>
+</div>
+
+<div class="card">
+  <h2>🗃️ Kütüphane (<span id="count">0</span> meme)</h2>
+  <div class="meme-grid" id="memeGrid"></div>
+</div>
+
+<script>
+async function loadMemes() {
+  const res = await fetch('/admin/memes');
+  const list = await res.json();
+  document.getElementById('count').textContent = list.length;
+  const grid = document.getElementById('memeGrid');
+  grid.innerHTML = list.map(m => `
+    <div class="meme-item" id="mi_${m.id}">
+      <img src="${m.url}" alt="${m.name}" loading="lazy"/>
+      <div class="info">${m.name}<span class="badge ${m.gif?'badge-gif':'badge-img'}">${m.gif?'GIF':'IMG'}</span></div>
+      ${!m.id.startsWith('d') ? `<button class="del" onclick="deleteMeme('${m.id}')">✕</button>` : ''}
+    </div>`).join('');
+}
+
+async function deleteMeme(id) {
+  if(!confirm('Bu memeyi sil?')) return;
+  await fetch('/admin/meme/'+id, {method:'DELETE'});
+  document.getElementById('mi_'+id)?.remove();
+  document.getElementById('count').textContent = parseInt(document.getElementById('count').textContent)-1;
+}
+
+async function uploadFiles(files) {
+  if(!files.length) return;
+  const fd = new FormData();
+  [...files].forEach(f => fd.append('memes', f));
+  const prog = document.getElementById('prog');
+  const msg = document.getElementById('msg');
+  prog.style.display = 'block';
+  prog.value = 30;
+  msg.textContent = 'Yükleniyor...';
+  try {
+    const res = await fetch('/admin/upload', {method:'POST', body: fd});
+    const data = await res.json();
+    prog.value = 100;
+    msg.textContent = `✅ ${data.added.length} meme yüklendi!`;
+    setTimeout(()=>{prog.style.display='none';prog.value=0;msg.textContent='';},2500);
+    loadMemes();
+  } catch(e) {
+    msg.textContent = '❌ Hata: ' + e.message;
+    prog.style.display='none';
+  }
+}
+
+document.getElementById('fileInput').onchange = e => uploadFiles(e.target.files);
+
+const dz = document.getElementById('dropZone');
+dz.ondragover = e => { e.preventDefault(); dz.classList.add('drag'); };
+dz.ondragleave = () => dz.classList.remove('drag');
+dz.ondrop = e => { e.preventDefault(); dz.classList.remove('drag'); uploadFiles(e.dataTransfer.files); };
+
+loadMemes();
+</script>
+</body>
+</html>
