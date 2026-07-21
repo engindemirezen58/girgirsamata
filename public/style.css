@@ -1282,7 +1282,7 @@ main {
 
 /* Showcase & Voting */
 .showcase-canvas-wrap {
-  width: 100%; max-width: 640px; background: #000; border-radius: 16px; overflow: hidden;
+  width: 100%; max-width: 640px; flex: 1; min-width: 300px; background: #000; border-radius: 16px; overflow: hidden;
   margin-bottom: 20px; border: 2px solid var(--primary-violet); box-shadow: 0 15px 40px rgba(165,94,234,0.2);
 }
 .vote-btns { display: flex; justify-content: center; gap: 20px; position: relative; margin-bottom: 15px; }
@@ -1774,7 +1774,7 @@ body.game-active .user-profile-pill {
   pointer-events: none;
 }
 .trash-text {
-  font-family: 'Impact', 'Arial Black', sans-serif;
+  font-family: 'Montserrat', 'Impact', 'Arial Black', sans-serif;
   font-size: 4rem;
   color: #fff;
   text-shadow: 0 0 15px #ff0000, 0 0 30px #ff0000;

@@ -75,6 +75,9 @@ async function downloadMeme(imgSrc, caption, style, caption2, style2, filename, 
   // Animated GIF generation
   try {
     toast(t('toastGifPreparing'), 5000);
+    if (document.fonts && document.fonts.ready) {
+      await document.fonts.ready;
+    }
     
     // 1. Fetch the GIF
     const response = await fetch(imgSrc);

@@ -141,7 +141,7 @@ function renderMemeDOM(container, imgSrc, caption, style, caption2, style2, star
       textDiv.style.left = (textStyle?.x || 50) + '%';
       textDiv.style.top = (textStyle?.y || defaultY) + '%';
       textDiv.style.transform = 'translateX(-50%)';
-      textDiv.style.fontFamily = "Impact, 'Arial Black', sans-serif";
+      textDiv.style.fontFamily = "'Montserrat', Impact, 'Arial Black', sans-serif";
       textDiv.style.fontWeight = '900';
       textDiv.style.color = '#fff';
       textDiv.style.textShadow = '-2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000';
@@ -167,7 +167,7 @@ function renderCustomCaption(ctx, w, h, text, style) {
   const upper = text.toLocaleUpperCase('tr-TR');
   const vwToPx = w / 100; 
   const fs = style.size * vwToPx * 2.5; 
-  ctx.font = `900 ${fs}px Impact, 'Arial Black', sans-serif`;
+  ctx.font = `900 ${fs}px 'Montserrat', Impact, 'Arial Black', sans-serif`;
   ctx.textAlign = 'center';
   ctx.letterSpacing = "1.5px";
   const lines = wrapText(ctx, upper, w * 0.9);
@@ -187,30 +187,38 @@ function drawMeme(canvas, imgSrc, caption, onDone, fixedW, fixedH, style, captio
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
   const img = new Image();
-  img.crossOrigin = "Anonymous"; // Eklendi: CORS sorunu Ã§Ä±kmamasÄ± iÃ§in
+  img.crossOrigin = "Anonymous";
   img.onload = () => {
-    canvas.width = fixedW; canvas.height = fixedH;
-    canvas.style.width = '100%'; canvas.style.height = 'auto';
-    ctx.fillStyle = 'var(--bg)'; ctx.fillRect(0, 0, fixedW, fixedH);
-    const iRatioD = img.naturalWidth / img.naturalHeight;
-    const cRatioD = fixedW / fixedH;
-    let ddw, ddh, ddx, ddy;
-    if (iRatioD > cRatioD) { ddw=fixedW; ddh=fixedW/iRatioD; ddx=0; ddy=(fixedH-ddh)/2; }
-    else { ddh=fixedH; ddw=fixedH*iRatioD; ddy=0; ddx=(fixedW-ddw)/2; }
-    ctx.drawImage(img, ddx, ddy, ddw, ddh);
-    if (caption && caption.trim() && caption !== '...') {
-      if (style) renderCustomCaption(ctx, fixedW, fixedH, caption.trim(), style);
-      else renderCaption(ctx, canvas.width, canvas.height, caption.trim());
+    const render = () => {
+      canvas.width = fixedW; canvas.height = fixedH;
+      canvas.style.width = '100%'; canvas.style.height = 'auto';
+      ctx.fillStyle = 'var(--bg)'; ctx.fillRect(0, 0, fixedW, fixedH);
+      const iRatioD = img.naturalWidth / img.naturalHeight;
+      const cRatioD = fixedW / fixedH;
+      let ddw, ddh, ddx, ddy;
+      if (iRatioD > cRatioD) { ddw=fixedW; ddh=fixedW/iRatioD; ddx=0; ddy=(fixedH-ddh)/2; }
+      else { ddh=fixedH; ddw=fixedH*iRatioD; ddy=0; ddx=(fixedW-ddw)/2; }
+      ctx.drawImage(img, ddx, ddy, ddw, ddh);
+      if (caption && caption.trim() && caption !== '...') {
+        if (style) renderCustomCaption(ctx, fixedW, fixedH, caption.trim(), style);
+        else renderCaption(ctx, canvas.width, canvas.height, caption.trim());
+      }
+      if (caption2 && caption2.trim() && caption2 !== '...') {
+        if (style2) renderCustomCaption(ctx, fixedW, fixedH, caption2.trim(), style2);
+        else renderCaption(ctx, canvas.width, canvas.height, caption2.trim());
+      }
+      if (caption3 && caption3.trim() && caption3 !== '...') {
+        if (style3) renderCustomCaption(ctx, fixedW, fixedH, caption3.trim(), style3);
+        else renderCaption(ctx, canvas.width, canvas.height, caption3.trim());
+      }
+      if (onDone) onDone();
+    };
+
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(render);
+    } else {
+      render();
     }
-    if (caption2 && caption2.trim() && caption2 !== '...') {
-      if (style2) renderCustomCaption(ctx, fixedW, fixedH, caption2.trim(), style2);
-      else renderCaption(ctx, canvas.width, canvas.height, caption2.trim());
-    }
-    if (caption3 && caption3.trim() && caption3 !== '...') {
-      if (style3) renderCustomCaption(ctx, fixedW, fixedH, caption3.trim(), style3);
-      else renderCaption(ctx, canvas.width, canvas.height, caption3.trim());
-    }
-    if (onDone) onDone();
   };
   img.onerror = () => {
     canvas.width = 400; canvas.height = 280;
@@ -225,7 +233,7 @@ function drawMeme(canvas, imgSrc, caption, onDone, fixedW, fixedH, style, captio
 function renderCaption(ctx, w, h, text) {
   const upper = text.toLocaleUpperCase('tr-TR');
   const fs = Math.max(w * 0.068, 32);
-  ctx.font = `900 ${fs}px Impact, 'Arial Black', sans-serif`;
+  ctx.font = `900 ${fs}px 'Montserrat', Impact, 'Arial Black', sans-serif`;
   ctx.textAlign = 'center';
   ctx.letterSpacing = "1.5px";
   const lines = wrapText(ctx, upper, w * 0.86);
