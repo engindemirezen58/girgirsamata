@@ -10,6 +10,7 @@ const ffmpegPath = require("ffmpeg-static");
 ffmpeg.setFfmpegPath(ffmpegPath);
 const rateLimit = require("express-rate-limit");
 const app = express();
+app.set('trust proxy', 1); // Get real IP behind Cloudflare/Nginx
 const server = http.createServer(app);
 const io = new Server(server, { maxHttpBufferSize: 1e7 }); // 10MB limit
 
@@ -618,9 +619,20 @@ function createCommunityServer(hostId, hostName, opts = {}) {
   return communityServers[id];
 }
 
-const socketConnectionsPerIp = {}; const MAX_SOCKETS_PER_IP = 5; const MAX_EVENTS_PER_SECOND = 15;
+function getRealIp(socket) {
+  const forwarded = socket.handshake.headers['x-forwarded-for'];
+  if (forwarded) return forwarded.split(',')[0].trim();
+  return socket.handshake.address;
+}
+const socketConnectionsPerIp = {}; 
+const roomsPerIp = {}; 
+const MAX_SOCKETS_PER_IP = 5; 
+const MAX_EVENTS_PER_SECOND = 15;
+const MAX_ROOMS_PER_IP = 4;
+const MAX_GLOBAL_ROOMS = 500;
+
 io.use((socket, next) => {
-  const ip = socket.handshake.address;
+  const ip = getRealIp(socket);
   if (!socketConnectionsPerIp[ip]) socketConnectionsPerIp[ip] = 0;
   if (socketConnectionsPerIp[ip] >= MAX_SOCKETS_PER_IP) return next(new Error("Bağlantı limiti aşıldı"));
   socketConnectionsPerIp[ip]++; next();
@@ -641,7 +653,11 @@ io.on("connection", (socket) => {
   function getRoom(id) { return rooms[id] || communityServers[id]; }
 
   socket.on("room:create", (opts) => {
-    const room = createRoom(socket.id, opts.playerName, opts); socket.join(room.code);
+    const ip = getRealIp(socket);
+    if (Object.keys(rooms).length + Object.keys(communityServers).length >= MAX_GLOBAL_ROOMS) return socket.emit("error", { msg: "Sunucu kapasitesi dolu." });
+    if ((roomsPerIp[ip] || 0) >= MAX_ROOMS_PER_IP) return socket.emit("error", { msg: "Çok fazla oda kurdunuz. Lütfen biraz bekleyin." });
+    roomsPerIp[ip] = (roomsPerIp[ip] || 0) + 1;
+    const room = createRoom(socket.id, opts.playerName, opts); room.creatorIp = ip; socket.join(room.code);
     socket.emit("room:joined", { roomCode: room.code, playerId: socket.id });
     io.to(room.code).emit("game:state", getRoomState(room));
   });
@@ -655,7 +671,7 @@ io.on("connection", (socket) => {
       if (activeCount >= room.maxPlayers) return socket.emit("error", { msg: "room_full" });
     }
     if (room.password && room.password !== password) return socket.emit("error", { msg: "wrong_password" });
-    if (room.bannedIps && room.bannedIps.includes(socket.handshake.address)) return socket.emit("error", { msg: "banned" });
+    if (room.bannedIps && room.bannedIps.includes(getRealIp(socket))) return socket.emit("error", { msg: "banned" });
     const nameTaken = Object.values(room.players).some(p => p.name.toLocaleLowerCase('tr-TR') === playerName.toLocaleLowerCase('tr-TR'));
     if (nameTaken) return socket.emit("error", { msg: "name_taken" });
     room.players[socket.id] = { id: socket.id, name: playerName, isHost: false };
@@ -684,7 +700,11 @@ io.on("connection", (socket) => {
   });
 
   socket.on("community:create", (opts) => {
-    const srv = createCommunityServer(socket.id, opts.playerName, { ...opts, name: opts.serverName || opts.playerName + "'in Sunucusu" });
+    const ip = getRealIp(socket);
+    if (Object.keys(rooms).length + Object.keys(communityServers).length >= MAX_GLOBAL_ROOMS) return socket.emit("error", { msg: "Sunucu kapasitesi dolu." });
+    if ((roomsPerIp[ip] || 0) >= MAX_ROOMS_PER_IP) return socket.emit("error", { msg: "Çok fazla oda kurdunuz. Lütfen biraz bekleyin." });
+    roomsPerIp[ip] = (roomsPerIp[ip] || 0) + 1;
+    const srv = createCommunityServer(socket.id, opts.playerName, { ...opts, name: opts.serverName || opts.playerName + "'in Sunucusu" }); srv.creatorIp = ip;
     socket.join(srv.id); socket.emit("room:joined", { roomCode: srv.id, playerId: socket.id });
     io.to(srv.id).emit("game:state", getRoomState(srv)); io.emit("community:update");
   });
@@ -698,7 +718,7 @@ io.on("connection", (socket) => {
       if (activeCount >= srv.maxPlayers) return socket.emit("error", { msg: "room_full" });
     }
     if (srv.password && srv.password !== password) return socket.emit("error", { msg: "wrong_password" });
-    if (srv.bannedIps && srv.bannedIps.includes(socket.handshake.address)) return socket.emit("error", { msg: "banned" });
+    if (srv.bannedIps && srv.bannedIps.includes(getRealIp(socket))) return socket.emit("error", { msg: "banned" });
     const nameTaken = Object.values(srv.players).some(p => p.name.toLocaleLowerCase('tr-TR') === playerName.toLocaleLowerCase('tr-TR'));
     if (nameTaken) return socket.emit("error", { msg: "name_taken" });
     srv.players[socket.id] = { id: socket.id, name: playerName, isHost: false }; srv.scores[socket.id] = 0;
@@ -899,7 +919,7 @@ io.on("connection", (socket) => {
   socket.on("system:get_all_memes", () => { socket.emit("system:all_memes", memePacks); });
 
   socket.on("disconnect", () => {
-    const ip = socket.handshake.address;
+    const ip = getRealIp(socket);
     if (socketConnectionsPerIp[ip]) { socketConnectionsPerIp[ip]--; if (socketConnectionsPerIp[ip] <= 0) delete socketConnectionsPerIp[ip]; }
     [...Object.entries(rooms), ...Object.entries(communityServers)].forEach(([code, room]) => {
       if (!room.players[socket.id]) return; const pid = socket.id;
@@ -913,7 +933,12 @@ io.on("connection", (socket) => {
       if (room.trashVotes) { delete room.trashVotes[pid]; Object.keys(room.trashVotes).forEach(targetId => { room.trashVotes[targetId] = room.trashVotes[targetId].filter(id => id !== pid); }); }
       if (room.trashedMemes) delete room.trashedMemes[pid];
       if (room.showcaseList) room.showcaseList = room.showcaseList.filter(s => s.playerId !== pid);
-      if (Object.keys(room.players).length === 0) { clearInterval(room.timer); if (rooms[code]) delete rooms[code]; if (communityServers[code]) delete communityServers[code]; return; }
+      if (Object.keys(room.players).length === 0) { 
+        clearInterval(room.timer); 
+        if (rooms[code]) { const ip = rooms[code].creatorIp; if (ip && roomsPerIp[ip]) roomsPerIp[ip]--; delete rooms[code]; }
+        if (communityServers[code]) { const ip = communityServers[code].creatorIp; if (ip && roomsPerIp[ip]) roomsPerIp[ip]--; delete communityServers[code]; }
+        return; 
+      }
       if (room.host === pid) { const newHost = Object.keys(room.players)[0]; room.host = newHost; room.players[newHost].isHost = true; }
       io.to(code).emit("game:state", getRoomState(room)); if (communityServers[code]) io.emit("community:update");
       io.to(code).emit("room_users_update", Object.values(room.players));
@@ -931,7 +956,7 @@ io.on("connection", (socket) => {
   socket.on("room:ban", ({ roomCode, targetId }) => {
     const room = getRoom(roomCode); if (!room || room.host !== socket.id || socket.id === targetId) return;
     if (!room.bannedIps) room.bannedIps = []; const target = io.sockets.sockets.get(targetId);
-    if (target) { room.bannedIps.push(target.handshake.address); target.emit("error", { msg: "banned" }); target.leave(roomCode || room.id); }
+    if (target) { room.bannedIps.push(getRealIp(target)); target.emit("error", { msg: "banned" }); target.leave(roomCode || room.id); }
     delete room.players[targetId]; delete room.scores[targetId];
     io.to(roomCode || room.id).emit("game:state", getRoomState(room)); if (communityServers[room.id]) io.emit("community:update");
     io.to(roomCode || room.id).emit("room_users_update", Object.values(room.players));
