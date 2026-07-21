@@ -1340,7 +1340,7 @@ function renderRoundSummary(state, roundVoteTotals){
     
     const canDownload = (state.activePlayers || []).includes(myId);
     const s = (v) => JSON.stringify(v).replace(/"/g, '&quot;');
-    const downloadBtnHtml = canDownload ? `<button class="btn btn-ghost" style="padding:6px 10px; font-size:.8rem;" onclick="downloadMeme(${s(sub.meme.url)}, ${s(sub.caption)}, ${s(sub.style)}, ${s(sub.caption2 || '')}, ${s(sub.style2 || null)}, ${s('meme_' + sub.playerName + '.gif')}, ${s(sub.caption3 || '')}, ${s(sub.style3 || null)})" title="${t('downloadBtn')}">${t('downloadBtn')}</button>` : '';
+    const downloadBtnHtml = canDownload ? `<button class="btn btn-ghost" style="padding:6px 10px; font-size:.8rem;" onclick="downloadMeme(${s(sub.meme.url)}, ${s(sub.caption)}, ${s(sub.style)}, ${s(sub.caption2 || '')}, ${s(sub.style2 || null)}, ${s(sub.caption3 || '')}, ${s(sub.style3 || null)}, ${s('meme_' + sub.playerName + '.gif')})" title="${t('downloadBtn')}">${t('downloadBtn')}</button>` : '';
     
     return `
       <div class="summary-meme-card" data-player-id="${sub.playerId}">
