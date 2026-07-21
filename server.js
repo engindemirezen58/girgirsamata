@@ -338,7 +338,7 @@ app.post('/api/download-video-meme', apiLimiter, (req, res) => {
   if (filters.length > 0) command.videoFilters(filters);
   command.output(outputPath)
     .on('end', () => { res.download(outputPath, 'meme.mp4', () => { if(fs.existsSync(outputPath)) fs.unlinkSync(outputPath); }); })
-    .on('error', (err) => { console.error('FFmpeg render hatası:', err); res.status(500).json({ error: 'Video render edilemedi' }); })
+    .on('error', (err) => { console.error('FFmpeg render hatası:', err); res.status(500).json({ error: 'Video render edilemedi: ' + (err.message || err) }); })
     .run();
 });
 
