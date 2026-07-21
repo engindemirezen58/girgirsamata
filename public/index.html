@@ -45,7 +45,6 @@
       <div class="dash-logo game-logo" onclick="location.reload()" style="margin-bottom:0; cursor:pointer;">
         <div class="logo-text">Gırgır<span>Şamata</span></div>
       </div>
-      <span class="page-title-label">GırgırŞamata Oyun Lobisi</span>
     </div>
     <div class="header-right">
 
@@ -64,11 +63,15 @@
   <main>
     <div class="game-area">
       <!-- sHome Screen -->
-      <div class="ad-container banner-ad"></div>
       <div id="sHome" class="screen active">
         <div class="home-split-layout">
           <!-- LEFT MAIN COLUMN -->
           <div class="home-main-col">
+            <!-- Centered Name Input -->
+            <div class="dash-profile-card" style="margin-bottom: 20px; display: flex; justify-content: center; align-items: center; padding: 15px 25px; background: rgba(0,0,0,0.2);">
+              <input type="text" id="inputName" maxlength="20" placeholder="İsmini Yaz..." value="" style="background:transparent; border:none; border-bottom:2px solid var(--primary-violet); color:var(--text); font-family:'Space Grotesk', sans-serif; font-weight:800; font-size:1.3rem; outline:none; width:100%; max-width: 400px; text-align: center; padding-bottom:6px; transition: border-color 0.3s;" onfocus="this.style.borderColor='var(--green)'" onblur="this.style.borderColor='var(--primary-violet)'"/>
+            </div>
+
             <!-- Hero Slider Banner -->
             <div class="hero-slider-card">
               <div class="hero-slider-text">
@@ -132,18 +135,6 @@
           
           <!-- RIGHT SIDEBAR COLUMN -->
           <aside class="home-right-col">
-            <!-- Profile Card -->
-            <div class="dash-profile-card">
-              <div class="profile-header">
-                <div class="profile-card-info" style="width: 100%;">
-                  <div class="profile-card-name">
-                    <input type="text" id="inputName" maxlength="20" placeholder="İsmini Yaz..." value="" style="background:transparent; border:none; border-bottom:2px solid var(--primary-violet); color:var(--text); font-family:'Space Grotesk', sans-serif; font-weight:800; font-size:1.15rem; outline:none; width:100%; padding-bottom:4px; transition: border-color 0.3s;" onfocus="this.style.borderColor='var(--green)'" onblur="this.style.borderColor='var(--primary-violet)'"/>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-
             <!-- Announcements -->
             <div class="dash-announcements-card">
               <h4 class="announcements-title">📢 DUYURULAR</h4>
@@ -158,6 +149,9 @@
                 <span class="dot"></span>
               </div>
             </div>
+            
+            <!-- Ad Container (Moved from top) -->
+            <div class="ad-container banner-ad" style="margin-top: 20px;"></div>
           </aside>
         </div>
       </div>
