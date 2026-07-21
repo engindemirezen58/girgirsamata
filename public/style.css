@@ -1269,7 +1269,7 @@ main {
 .timer-bar.boosted { background: var(--red); }
 
 .meme-canvas-wrap {
-  width: 100%; max-width: 540px; background: #000; border-radius: 12px; overflow: hidden;
+  width: 100%; max-width: 540px; aspect-ratio: 4/3; background: #000; border-radius: 12px; overflow: hidden;
   margin-bottom: 15px; border: 1px solid var(--border); box-shadow: 0 10px 25px rgba(0,0,0,0.5);
 }
 .caption-area {
@@ -1282,7 +1282,7 @@ main {
 
 /* Showcase & Voting */
 .showcase-canvas-wrap {
-  width: 100%; max-width: 640px; flex: 1; min-width: 300px; background: #000; border-radius: 16px; overflow: hidden;
+  width: 100%; max-width: 640px; flex: 1; min-width: 300px; aspect-ratio: 4/3; background: #000; border-radius: 16px; overflow: hidden;
   margin-bottom: 20px; border: 2px solid var(--primary-violet); box-shadow: 0 15px 40px rgba(165,94,234,0.2);
 }
 .vote-btns { display: flex; justify-content: center; gap: 20px; position: relative; margin-bottom: 15px; }

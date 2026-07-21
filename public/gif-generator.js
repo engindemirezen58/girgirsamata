@@ -75,8 +75,8 @@ async function downloadMeme(imgSrc, caption, style, caption2, style2, filename, 
   // Animated GIF generation
   try {
     toast(t('toastGifPreparing'), 5000);
-    if (document.fonts && document.fonts.ready) {
-      await document.fonts.ready;
+    if (document.fonts && typeof document.fonts.load === 'function') {
+      await document.fonts.load('900 24px Montserrat').catch(() => {});
     }
     
     // 1. Fetch the GIF

@@ -808,7 +808,7 @@ setInterval(() => {
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => console.log(`MemeWar running on http://localhost:${PORT}`));
-app.get('(.*)', (req, res) => {
+app.get(/.*/, (req, res) => {
     res.setHeader('Content-Type', 'text/html; charset=UTF-8');
     res.sendFile(path.join(PUBLIC_PATH, 'index.html'));
 });

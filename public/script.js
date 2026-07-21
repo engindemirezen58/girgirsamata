@@ -167,7 +167,7 @@ function renderCustomCaption(ctx, w, h, text, style) {
   const upper = text.toLocaleUpperCase('tr-TR');
   const vwToPx = w / 100; 
   const fs = style.size * vwToPx * 2.5; 
-  ctx.font = `900 ${fs}px 'Montserrat', Impact, 'Arial Black', sans-serif`;
+  ctx.font = `900 ${fs}px Montserrat, Impact, 'Arial Black', sans-serif`;
   ctx.textAlign = 'center';
   ctx.letterSpacing = "1.5px";
   const lines = wrapText(ctx, upper, w * 0.9);
@@ -214,8 +214,8 @@ function drawMeme(canvas, imgSrc, caption, onDone, fixedW, fixedH, style, captio
       if (onDone) onDone();
     };
 
-    if (document.fonts && document.fonts.ready) {
-      document.fonts.ready.then(render);
+    if (document.fonts && typeof document.fonts.load === 'function') {
+      document.fonts.load('900 24px Montserrat').then(render).catch(() => render());
     } else {
       render();
     }
@@ -233,7 +233,7 @@ function drawMeme(canvas, imgSrc, caption, onDone, fixedW, fixedH, style, captio
 function renderCaption(ctx, w, h, text) {
   const upper = text.toLocaleUpperCase('tr-TR');
   const fs = Math.max(w * 0.068, 32);
-  ctx.font = `900 ${fs}px 'Montserrat', Impact, 'Arial Black', sans-serif`;
+  ctx.font = `900 ${fs}px Montserrat, Impact, 'Arial Black', sans-serif`;
   ctx.textAlign = 'center';
   ctx.letterSpacing = "1.5px";
   const lines = wrapText(ctx, upper, w * 0.86);
