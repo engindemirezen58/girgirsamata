@@ -1,4 +1,4 @@
-﻿const ICON_PLAY = `<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>`;
+const ICON_PLAY = `<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>`;
 const ICON_PAUSE = `<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`;
 const ICON_VOL = `<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>`;
 const ICON_MUTE = `<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>`;
@@ -130,6 +130,7 @@ function renderMemeDOM(container, imgSrc, caption, style, caption2, style2, star
     media.style.display = 'block';
     container.appendChild(media);
   }
+  container.style.containerType = 'inline-size';
 
   
   const addTextDiv = (text, textStyle, defaultY) => {
@@ -150,14 +151,9 @@ function renderMemeDOM(container, imgSrc, caption, style, caption2, style2, star
       textDiv.style.width = '90%';
       textDiv.style.letterSpacing = '1.5px';
       
-      const ro = new ResizeObserver(entries => {
-        for (let entry of entries) {
-          const w = entry.contentRect.width;
-          const fs = (textStyle?.size || 3) * (w / 100) * 2.5;
-          textDiv.style.fontSize = fs + 'px';
-        }
-      });
-      ro.observe(container);
+      const fs = (textStyle?.size || 3) * 2.5;
+      textDiv.style.fontSize = fs + 'cqw';
+      
       container.appendChild(textDiv);
     }
   };
@@ -668,7 +664,7 @@ function renderLobby(state) {
 
   document.getElementById('playersGrid').innerHTML = state.players.map(p => {
     const pIsViewer = (state.viewers || []).includes(p.id);
-    const roleBadge = pIsViewer ? `<span style="font-size:0.6rem; padding:1px 5px; border-radius:4px; background:rgba(168,85,247,0.3); color:#c084fc; margin-left:4px;">ğŸ‘ Ä°zl</span>` : `<span style="font-size:0.6rem; padding:1px 5px; border-radius:4px; background:rgba(74,222,128,0.2); color:#4ade80; margin-left:4px;">ğŸ® Oyn</span>`;
+    const roleBadge = pIsViewer ? `<span style="font-size:0.6rem; padding:1px 5px; border-radius:4px; background:rgba(168,85,247,0.3); color:#c084fc; margin-left:4px;">ğŸ‘  Ä°zl</span>` : `<span style="font-size:0.6rem; padding:1px 5px; border-radius:4px; background:rgba(74,222,128,0.2); color:#4ade80; margin-left:4px;">ğŸŽ® Oyn</span>`;
     const showRoleBadge = isStreamer;
     const rightPad = (isHost && p.id !== myId) ? '120px' : '13px';
     const isKing = state.gameMode === 'king_long_live' && state.kingId === p.id;
@@ -745,7 +741,7 @@ function renderLobby(state) {
         <div style="margin-bottom:4px;"><label style="display:block; font-size:0.75rem; color:var(--muted); font-weight:700; margin-bottom:2px;">${t('settingChangeLong')}</label><div class="range-row"><input type="range" id="ls_change" min="0" max="30" value="${!s.changeAllowed?0:s.changeCount}" oninput="document.getElementById('ls_change_v').textContent=this.value=='0'?'${t('closed')}':this.value;sendSettings()"/><span class="range-val" id="ls_change_v" style="font-size:0.75rem; color:var(--text);">${!s.changeAllowed||s.changeCount==0?t('closed'):s.changeCount}</span></div></div>
         <div style="margin-top:6px; margin-bottom:2px; padding:6px 10px; background:rgba(255,255,255,0.05); border-radius:8px; border:1px solid rgba(255,255,255,0.1);">
           <label style="display:flex; justify-content:space-between; align-items:center; font-size:0.95rem; color:var(--text); font-weight:800; cursor:pointer;">
-            <span>${myLang === 'tr' ? 'ğŸ—‘ï¸ Ã‡Ã¶p butonu' : 'ğŸ—‘ï¸ Trash Button'}</span>
+            <span>${myLang === 'tr' ? 'ğŸ—‘ï¸  Ã‡Ã¶p butonu' : 'ğŸ—‘ï¸  Trash Button'}</span>
             <input type="checkbox" id="ls_trash" ${s.trashAllowed === false ? '' : 'checked'} onchange="document.getElementById('trash_info').style.display=this.checked?'block':'none'; sendSettings()" style="width:18px; height:18px; cursor:pointer; accent-color:var(--red);">
           </label>
           <div id="trash_info" style="margin-top:4px; font-size:0.75rem; color:var(--muted); font-weight:600; line-height:1.2; display:${s.trashAllowed === false ? 'none' : 'block'};">
@@ -1481,8 +1477,22 @@ socket.on('game:state', state => {
   }
 });
 
+socket.on('room_users_update', (players) => {
+  if (gameState) {
+    gameState.players = players;
+    if (gameState.state === 'lobby') {
+      renderLobby(gameState);
+      const searchInput = document.getElementById('playerSearchInput');
+      if (searchInput && searchInput.value) {
+        filterPlayersGrid(searchInput.value);
+      }
+    }
+  }
+});
+
 socket.on('game:playerTrashExplosion', (trashedPlayers) => {
   const audio = new Audio('/sounds/explosion.mp3');
+  audio.volume = 0.25;
   audio.play().catch(e => console.warn('Audio play prevented', e));
 
   trashedPlayers.forEach(tp => {
@@ -1491,7 +1501,7 @@ socket.on('game:playerTrashExplosion', (trashedPlayers) => {
       const overlay = document.createElement('div');
       overlay.className = 'trash-overlay';
       overlay.innerHTML = `
-        <div class="trash-text">Ã‡Ã–PLENDÄ°!</div>
+        <div class="trash-text">ÇÖPLENDİ!</div>
         <div class="trash-pts">${tp.penalty} Puan</div>
       `;
       card.appendChild(overlay);
@@ -1505,6 +1515,7 @@ socket.on('game:playerTrashExplosion', (trashedPlayers) => {
 
 socket.on('game:showcase_trashed', ({ penalty }) => {
   const audio = new Audio('https://www.myinstants.com/media/sounds/metal-pipe-clang.mp3');
+  audio.volume = 0.25;
   audio.play().catch(e => console.warn('Audio play prevented', e));
   
   const container = document.getElementById('showcaseContainer');
@@ -1513,7 +1524,7 @@ socket.on('game:showcase_trashed', ({ penalty }) => {
     overlay.className = 'trash-overlay';
     overlay.style.borderRadius = '12px'; // showcase border radius
     overlay.innerHTML = `
-      <div class="trash-text">Ã‡Ã–PLENDÄ°!</div>
+      <div class="trash-text">ÇÖPLENDİ!</div>
       <div class="trash-pts">${penalty} Puan</div>
     `;
     container.appendChild(overlay);
@@ -1689,20 +1700,19 @@ setInterval(() => {
 function updateCaptionSize() {
   const overlay = document.getElementById('captionOverlay');
   if (!overlay) return;
-  const w = overlay.getBoundingClientRect().width;
-  if (!w) return;
+  overlay.style.containerType = 'inline-size';
 
   const val = document.getElementById('captionSizeSlider').value;
   const drag = document.getElementById('captionDrag');
-  if (drag) drag.style.fontSize = (val * (w / 100) * 2.5) + 'px';
+  if (drag) drag.style.fontSize = (val * 2.5) + 'cqw';
   
   const slider2 = document.getElementById('captionSizeSlider2');
   const drag2 = document.getElementById('captionDrag2');
-  if (drag2 && slider2) drag2.style.fontSize = (slider2.value * (w / 100) * 2.5) + 'px';
+  if (drag2 && slider2) drag2.style.fontSize = (slider2.value * 2.5) + 'cqw';
   
   const slider3 = document.getElementById('captionSizeSlider3');
   const drag3 = document.getElementById('captionDrag3');
-  if (drag3 && slider3) drag3.style.fontSize = (slider3.value * (w / 100) * 2.5) + 'px';
+  if (drag3 && slider3) drag3.style.fontSize = (slider3.value * 2.5) + 'cqw';
 }
 
 const dragEls = [document.getElementById('captionDrag'), document.getElementById('captionDrag2'), document.getElementById('captionDrag3')];
@@ -1719,8 +1729,7 @@ dragEls.forEach(el => {
 });
 
 if(overlayEl) {
-  const roWriting = new ResizeObserver(() => updateCaptionSize());
-  roWriting.observe(overlayEl);
+  overlayEl.style.containerType = 'inline-size';
   
   document.addEventListener('mousemove', dragMove);
   document.addEventListener('touchmove', dragMove, {passive:false});

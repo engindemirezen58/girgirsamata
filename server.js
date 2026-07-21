@@ -32,10 +32,20 @@ const apiLimiter = rateLimit({
 
 const PUBLIC_PATH = path.join(__dirname, "public");
 app.use(generalLimiter);
-app.use(express.static(PUBLIC_PATH));
+app.use(express.static(PUBLIC_PATH, {
+  setHeaders: (res, path) => {
+    if (path.endsWith('.html')) res.setHeader('Content-Type', 'text/html; charset=UTF-8');
+    else if (path.endsWith('.js')) res.setHeader('Content-Type', 'application/javascript; charset=UTF-8');
+    else if (path.endsWith('.css')) res.setHeader('Content-Type', 'text/css; charset=UTF-8');
+    else if (path.endsWith('.json')) res.setHeader('Content-Type', 'application/json; charset=UTF-8');
+  }
+}));
 app.use(express.json());
 
-app.get("/", (req, res) => res.sendFile(path.join(PUBLIC_PATH, "index.html")));
+app.get("/", (req, res) => {
+  res.setHeader('Content-Type', 'text/html; charset=UTF-8');
+  res.sendFile(path.join(PUBLIC_PATH, "index.html"));
+});
 
 // ── Upload ──
 const UPLOAD_DIR = path.join(PUBLIC_PATH, "uploads");
@@ -515,6 +525,7 @@ io.on("connection", (socket) => {
     if (room.streamerMode) { if (!room.viewers) room.viewers = []; room.viewers.push(socket.id); }
     socket.join(roomCode); socket.emit("room:joined", { roomCode: room.code, playerId: socket.id });
     io.to(roomCode).emit("game:state", getRoomState(room));
+    io.to(roomCode).emit("room_users_update", Object.values(room.players));
   });
 
   socket.on("game:start", ({ roomCode }) => {
@@ -553,6 +564,7 @@ io.on("connection", (socket) => {
     if (srv.streamerMode) { if (!srv.viewers) srv.viewers = []; srv.viewers.push(socket.id); }
     socket.join(serverId); socket.emit("room:joined", { roomCode: srv.id, playerId: socket.id });
     io.to(serverId).emit("game:state", getRoomState(srv)); io.emit("community:update");
+    io.to(serverId).emit("room_users_update", Object.values(srv.players));
   });
 
   socket.on("community:start", ({ serverId }) => {
@@ -758,6 +770,7 @@ io.on("connection", (socket) => {
       if (Object.keys(room.players).length === 0) { clearInterval(room.timer); if (rooms[code]) delete rooms[code]; if (communityServers[code]) delete communityServers[code]; return; }
       if (room.host === pid) { const newHost = Object.keys(room.players)[0]; room.host = newHost; room.players[newHost].isHost = true; }
       io.to(code).emit("game:state", getRoomState(room)); if (communityServers[code]) io.emit("community:update");
+      io.to(code).emit("room_users_update", Object.values(room.players));
     });
   });
 
@@ -766,6 +779,7 @@ io.on("connection", (socket) => {
     const target = io.sockets.sockets.get(targetId); if (target) { target.emit("error", { msg: "kicked" }); target.leave(roomCode || room.id); }
     delete room.players[targetId]; delete room.scores[targetId];
     io.to(roomCode || room.id).emit("game:state", getRoomState(room)); if (communityServers[room.id]) io.emit("community:update");
+    io.to(roomCode || room.id).emit("room_users_update", Object.values(room.players));
   });
 
   socket.on("room:ban", ({ roomCode, targetId }) => {
@@ -774,6 +788,7 @@ io.on("connection", (socket) => {
     if (target) { room.bannedIps.push(target.handshake.address); target.emit("error", { msg: "banned" }); target.leave(roomCode || room.id); }
     delete room.players[targetId]; delete room.scores[targetId];
     io.to(roomCode || room.id).emit("game:state", getRoomState(room)); if (communityServers[room.id]) io.emit("community:update");
+    io.to(roomCode || room.id).emit("room_users_update", Object.values(room.players));
   });
 });
 
@@ -793,6 +808,7 @@ setInterval(() => {
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => console.log(`MemeWar running on http://localhost:${PORT}`));
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
+app.get('(.*)', (req, res) => {
+    res.setHeader('Content-Type', 'text/html; charset=UTF-8');
+    res.sendFile(path.join(PUBLIC_PATH, 'index.html'));
 });

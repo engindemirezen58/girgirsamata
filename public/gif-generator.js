@@ -46,13 +46,29 @@ async function downloadMeme(imgSrc, caption, style, caption2, style2, filename, 
   const isGif = /\.gif$/i.test(imgSrc);
   if (!isGif) {
     // Standard static image download via hidden canvas
-    const canvas = document.createElement('canvas');
-    drawMeme(canvas, imgSrc, caption, () => {
-      const link = document.createElement('a');
-      link.download = filename || 'meme.png';
-      link.href = canvas.toDataURL('image/png');
-      link.click();
-    }, 800, 600, style, caption2, style2, caption3, style3);
+    fetch(imgSrc)
+      .then(res => res.blob())
+      .then(blob => {
+        const objUrl = URL.createObjectURL(blob);
+        const canvas = document.createElement('canvas');
+        drawMeme(canvas, objUrl, caption, () => {
+          canvas.toBlob(outBlob => {
+            const dlUrl = window.URL.createObjectURL(outBlob);
+            const link = document.createElement('a');
+            link.download = filename || 'meme.png';
+            link.href = dlUrl;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(dlUrl);
+            window.URL.revokeObjectURL(objUrl);
+          }, 'image/png');
+        }, 800, 600, style, caption2, style2, caption3, style3);
+      })
+      .catch(err => {
+        console.error("Static image download error:", err);
+        if(typeof toast === 'function') toast(window.myLang === 'tr' ? 'İndirme sırasında bir hata oluştu.' : 'An error occurred during download.', 3000);
+      });
     return;
   }
 
