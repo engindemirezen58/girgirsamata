@@ -16,8 +16,12 @@ let allMemesData = {}; // Will hold all memes from all packs
 socket.emit("system:get_packs");
 socket.on("system:packs", packs => { availablePacks = packs; });
 
-socket.emit("system:get_all_memes");
-socket.on("system:all_memes", allMemes => { allMemesData = allMemes; });
+socket.on("system:all_memes", allMemes => { 
+  allMemesData = allMemes; 
+  if (document.getElementById('modalMemeSelect').style.display === 'flex') {
+    renderModalMemes('');
+  }
+});
 
 function renderMemeDOM(container, imgSrc, caption, style, caption2, style2, startMuted = false, caption3, style3) {
   if (!container) return;
@@ -1012,7 +1016,14 @@ function openArchiveModal() {
   document.getElementById('modalMemeSelect').style.display = 'flex';
   const searchInput = document.getElementById('memeSearchInput');
   if (searchInput) searchInput.value = '';
-  renderModalMemes('');
+  
+  if (Object.keys(allMemesData).length === 0) {
+    document.getElementById('modalMemeGrid').innerHTML = '<div class="empty-state" style="grid-column: 1/-1;">Arşiv yükleniyor... Lütfen bekleyin.</div>';
+    socket.emit("system:get_all_memes");
+  } else {
+    renderModalMemes('');
+  }
+  
   if (searchInput) searchInput.focus();
 }
 

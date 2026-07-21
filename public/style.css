@@ -2123,3 +2123,4 @@ body.game-active .user-profile-pill {
   max-width: 728px;
   margin: 0 auto 15px auto;
 }
+@media (max-width: 768px) { .bg-glow-1, .bg-glow-2, .bg-glow-3 { display: none !important; } } 
