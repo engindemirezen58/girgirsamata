@@ -385,7 +385,7 @@ function removeSecondText() {
   document.getElementById('textControls2').style.display = 'none';
   document.getElementById('captionDrag2').style.display = 'none';
   const capText2 = document.getElementById('captionText2');
-  if (capText2) capText2.value = '';
+  if (capText2) { capText2.value = ''; capText2.disabled = false; }
   const drag2 = document.getElementById('captionDrag2');
   if (drag2) drag2.textContent = '';
   document.getElementById('btnAddText').style.display = 'block';
@@ -397,7 +397,7 @@ function removeThirdText() {
   document.getElementById('textControls3').style.display = 'none';
   document.getElementById('captionDrag3').style.display = 'none';
   const capText3 = document.getElementById('captionText3');
-  if (capText3) capText3.value = '';
+  if (capText3) { capText3.value = ''; capText3.disabled = false; }
   const drag3 = document.getElementById('captionDrag3');
   if (drag3) drag3.textContent = '';
   document.getElementById('btnAddThirdText').style.display = 'inline-block';
