@@ -15,11 +15,9 @@ const io = new Server(server, { maxHttpBufferSize: 1e7 }); // 10MB limit
 
 // ── HTTP Rate Limiting ──
 const generalLimiter = rateLimit({
-  windowMs: 60 * 1000, 
-  max: 60,             
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { error: "Çok fazla istek gönderdiniz. Lütfen biraz bekleyin." },
+  windowMs: 1 * 60 * 1000, // 1 dakika (Pencereyi daralt, limitleri artır)
+  max: 1000, // Limitini en az 1000'e çıkar
+  message: { error: "Sunucu meşgul, çok fazla istek." }
 });
 
 const apiLimiter = rateLimit({
@@ -31,7 +29,44 @@ const apiLimiter = rateLimit({
 });
 
 const PUBLIC_PATH = path.join(__dirname, "public");
-app.use(generalLimiter);
+
+// ── Memes Dosya Sunucu (express.static'in UTF-8 sorunlarını bypass eder) ──
+app.get('/memes/:pack/:file', (req, res, next) => {
+  try {
+    const pack = req.params.pack;
+    const file = req.params.file;
+    // Güvenlik: directory traversal engelle
+    if (pack.includes('..') || file.includes('..') || pack.includes('/') || file.includes('/') || pack.includes('\\') || file.includes('\\')) {
+      return res.status(400).send('Bad request');
+    }
+    const filePath = path.join(PUBLIC_PATH, 'memes', pack, file);
+    // Dosyanın PUBLIC_PATH/memes altında olduğunu doğrula
+    const resolved = path.resolve(filePath);
+    const memesRoot = path.resolve(path.join(PUBLIC_PATH, 'memes'));
+    if (!resolved.startsWith(memesRoot)) {
+      return res.status(403).send('Forbidden');
+    }
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).send('Not found');
+    }
+    // Content-Type belirle
+    const ext = path.extname(file).toLowerCase();
+    const mimeTypes = {
+      '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png',
+      '.gif': 'image/gif', '.webp': 'image/webp', '.mp4': 'video/mp4',
+      '.webm': 'video/webm', '.mov': 'video/quicktime'
+    };
+    if (mimeTypes[ext]) {
+      res.setHeader('Content-Type', mimeTypes[ext]);
+    }
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    res.sendFile(resolved);
+  } catch (err) {
+    console.error('Meme dosya sunucu hatası:', err.message);
+    next();
+  }
+});
+
 app.use(express.static(PUBLIC_PATH, {
   setHeaders: (res, path) => {
     if (path.endsWith('.html')) res.setHeader('Content-Type', 'text/html; charset=UTF-8');
@@ -40,7 +75,12 @@ app.use(express.static(PUBLIC_PATH, {
     else if (path.endsWith('.json')) res.setHeader('Content-Type', 'application/json; charset=UTF-8');
   }
 }));
+
+
 app.use(express.json());
+
+// Sadece API rotalarına genel rate limit uygula
+app.use('/api/', generalLimiter);
 
 app.get("/", (req, res) => {
   res.setHeader('Content-Type', 'text/html; charset=UTF-8');
@@ -62,7 +102,7 @@ app.post('/api/upload-pack', apiLimiter, upload.array('files'), (req, res) => {
   if (!packName || !req.files || req.files.length === 0) {
     return res.status(400).json({ error: 'Pack name or files missing.' });
   }
-  const safeName = packName.trim().replace(/[\\/:\*\?"<>\|]/g, '');
+  const safeName = slugifyPackName(packName.trim()) || 'pack_' + uuidv4().substring(0, 8);
   const packDir = path.join(PUBLIC_PATH, 'memes', safeName);
   if (fs.existsSync(packDir)) {
     return res.status(400).json({ error: 'Bu isimde bir paket zaten var.' });
@@ -97,31 +137,123 @@ loadUploadedMemes();
 
 let memePacks = {};
 let packPreviews = {};
+let packDisplayNames = {}; // slug → original display name
+
+// Türkçe karakterleri ASCII'ye çevir ve slug oluştur
+function slugifyPackName(name) {
+  return name
+    .replace(/ü/gi, 'u').replace(/Ü/g, 'U')
+    .replace(/ö/gi, 'o').replace(/Ö/g, 'O')
+    .replace(/ı/g, 'i').replace(/İ/g, 'I')
+    .replace(/ğ/gi, 'g').replace(/Ğ/g, 'G')
+    .replace(/ş/gi, 's').replace(/Ş/g, 'S')
+    .replace(/ç/gi, 'c').replace(/Ç/g, 'C')
+    .replace(/â/gi, 'a').replace(/î/gi, 'i').replace(/û/gi, 'u')
+    .replace(/[^a-zA-Z0-9-]/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_|_$/g, '')
+    .substring(0, 80);
+}
+
+// Dosya adı URL-safe mi kontrol et (sadece ASCII alfanümerik, tire, alt çizgi, nokta)
+function isFilenameSafe(filename) {
+  const base = filename.replace(/\.[^.]+$/, "");
+  return /^[a-zA-Z0-9._-]+$/.test(base);
+}
+
 function loadMemePacks() {
   const MEMES_DIR = path.join(PUBLIC_PATH, "memes");
   if (!fs.existsSync(MEMES_DIR)) fs.mkdirSync(MEMES_DIR, { recursive: true });
+  
+  // Önce mevcut verileri sıfırla
+  memePacks = {};
+  packPreviews = {};
+  packDisplayNames = {};
+
   let dirs = fs.readdirSync(MEMES_DIR, { withFileTypes: true })
     .filter(dirent => dirent.isDirectory())
     .map(dirent => dirent.name);
-  dirs.sort((a, b) => {
-    const isA = a.toLowerCase().includes("tüm memeler") || a.toLowerCase().includes("tm memeler") || a.toLowerCase().includes("tum memeler");
-    const isB = b.toLowerCase().includes("tüm memeler") || b.toLowerCase().includes("tm memeler") || b.toLowerCase().includes("tum memeler");
+
+  // ── Klasör adlarını sanitize et ──
+  const sanitizedDirs = [];
+  dirs.forEach(originalName => {
+    const slug = slugifyPackName(originalName);
+    if (slug !== originalName) {
+      const oldPath = path.join(MEMES_DIR, originalName);
+      let newPath = path.join(MEMES_DIR, slug);
+      // Çakışma varsa sonuna sayı ekle
+      let finalSlug = slug;
+      let counter = 2;
+      while (fs.existsSync(newPath) && newPath !== oldPath) {
+        finalSlug = slug + '_' + counter;
+        newPath = path.join(MEMES_DIR, finalSlug);
+        counter++;
+      }
+      if (newPath !== oldPath) {
+        try {
+          fs.renameSync(oldPath, newPath);
+          console.log(`[Sanitize Klasör] "${originalName}" → "${finalSlug}"`);
+          packDisplayNames[finalSlug] = originalName;
+          sanitizedDirs.push(finalSlug);
+        } catch (e) {
+          console.error(`[Sanitize Klasör HATA] "${originalName}": ${e.message}`);
+          sanitizedDirs.push(originalName); // Hata olursa orijinali kullan
+        }
+      } else {
+        packDisplayNames[finalSlug] = originalName;
+        sanitizedDirs.push(finalSlug);
+      }
+    } else {
+      sanitizedDirs.push(originalName);
+    }
+  });
+
+  // Sıralama: "tum memeler" veya "varsayilan" içeren en başa
+  sanitizedDirs.sort((a, b) => {
+    const aDisplay = (packDisplayNames[a] || a).toLowerCase();
+    const bDisplay = (packDisplayNames[b] || b).toLowerCase();
+    const isA = aDisplay.includes("tüm memeler") || aDisplay.includes("tm memeler") || aDisplay.includes("tum memeler") || a.toLowerCase().includes("tum_memeler");
+    const isB = bDisplay.includes("tüm memeler") || bDisplay.includes("tm memeler") || bDisplay.includes("tum memeler") || b.toLowerCase().includes("tum_memeler");
     if (isA && !isB) return -1;
     if (!isA && isB) return 1;
     return a.localeCompare(b);
   });
-  dirs.forEach(packName => {
+
+  // ── Dosyaları oku ve gerekirse yeniden adlandır ──
+  sanitizedDirs.forEach(packName => {
     const packMemes = [];
     const packPath = path.join(MEMES_DIR, packName);
+    
     fs.readdirSync(packPath).forEach(f => {
       if (!/\.(jpg|jpeg|png|gif|webp|mp4|webm)$/i.test(f)) return;
-      const id = "p_" + packName + "_" + f.replace(/\.[^.]+$/, "");
-      packMemes.push({ id, url: "/memes/" + packName + "/" + f, name: f });
+      
+      let actualFilename = f;
+      
+      // Dosya adı güvenli değilse UUID'ye dönüştür
+      if (!isFilenameSafe(f)) {
+        const ext = path.extname(f).toLowerCase();
+        const newName = uuidv4() + ext;
+        const oldFilePath = path.join(packPath, f);
+        const newFilePath = path.join(packPath, newName);
+        try {
+          fs.renameSync(oldFilePath, newFilePath);
+          actualFilename = newName;
+        } catch (e) {
+          console.error(`[Sanitize Dosya HATA] "${f}": ${e.message}`);
+          // Hata olursa orijinal adı kullanmaya devam et (encoding ile dene)
+        }
+      }
+      
+      const id = "p_" + packName + "_" + actualFilename.replace(/\.[^.]+$/, "");
+      packMemes.push({ id, url: "/memes/" + packName + "/" + actualFilename, name: actualFilename });
     });
+    
     if (packMemes.length > 0) {
       memePacks[packName] = packMemes;
     }
   });
+
+  // ── Pack önizlemeleri oluştur ──
   Object.keys(memePacks).forEach(packName => {
     const memes = memePacks[packName];
     const imageMemes = memes.filter(m => !/\.(mp4|webm|mov)$/i.test(m.url));
@@ -135,6 +267,9 @@ function loadMemePacks() {
     }
     packPreviews[packName] = previews;
   });
+  
+  const totalMemes = Object.values(memePacks).reduce((s, p) => s + p.length, 0);
+  console.log(`[Memes] ${Object.keys(memePacks).length} paket, ${totalMemes} meme yüklendi.`);
 }
 loadMemePacks();
 

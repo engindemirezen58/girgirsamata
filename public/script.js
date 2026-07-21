@@ -128,6 +128,14 @@ function renderMemeDOM(container, imgSrc, caption, style, caption2, style2, star
     media.style.height = '100%';
     media.style.objectFit = 'contain';
     media.style.display = 'block';
+    media.onerror = function() {
+      console.error('Görsel yüklenemedi:', this.src);
+      this.onerror = null;
+      this.style.objectFit = 'scale-down';
+      this.style.padding = '20%';
+      this.style.opacity = '0.3';
+      this.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23888"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>');
+    };
     container.appendChild(media);
   }
   container.style.containerType = 'inline-size';
@@ -711,7 +719,7 @@ function renderLobby(state) {
   if (isHost) {
     const selectedPackDef = availablePacks.find(p => p.id === s.memePack) || availablePacks[0] || {id: 'default', previews: []};
     const packName = selectedPackDef.id === 'default' ? t('defaultPack') : selectedPackDef.id;
-    const imgs = (selectedPackDef.previews || []).map(url => url ? `<img src="${url}">` : `<div class="empty-slot"></div>`).join('');
+    const imgs = (selectedPackDef.previews || []).map(url => url ? `<img src="${url}" loading="lazy" onerror="this.onerror=null;this.style.opacity='0.3';this.src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"%23888\"><path d=\"M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z\"/></svg>')">` : `<div class="empty-slot"></div>`).join('');
     
     const packHtml = `
       <div class="pack-item selected" style="margin: 0 auto; cursor: default;">
@@ -763,7 +771,7 @@ function renderLobby(state) {
     let imgs = (selectedPack.previews || []).map(url => {
       if(!url) return `<div class="empty-slot"></div>`;
       if(/\.(mp4|webm|mov)$/i.test(url)) return `<video src="${url}#t=0.5" autoplay loop muted playsinline preload="metadata" style="width:100%;height:100%;object-fit:cover;"></video>`;
-      return `<img src="${url}">`;
+      return `<img src="${url}" loading="lazy" onerror="this.onerror=null;this.style.opacity='0.3';this.src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"%23888\"><path d=\"M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z\"/></svg>')">`;
     }).join('');
 
     document.getElementById('settingsContent').innerHTML = `
@@ -838,7 +846,7 @@ function renderModalPacks(query) {
     const imgs = (p.previews || []).map(url => {
       if(!url) return `<div class="empty-slot"></div>`;
       if(/\.(mp4|webm|mov)$/i.test(url)) return `<video src="${url}#t=0.5" autoplay loop muted playsinline preload="metadata" style="width:100%;height:100%;object-fit:cover;"></video>`;
-      return `<img src="${url}">`;
+      return `<img src="${url}" loading="lazy" onerror="this.onerror=null;this.style.opacity='0.3';this.src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"%23888\"><path d=\"M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z\"/></svg>')">`;
     }).join('');
     return `
       <div class="pack-item ${isSelected ? 'selected' : ''}" onclick="selectPack('${p.id}')" style="margin-bottom:6px">
@@ -1038,7 +1046,7 @@ function renderModalMemes(query) {
     const isVideo = /\.(mp4|webm|mov)$/i.test(m.url) || (typeof m.url === 'string' && m.url.startsWith('data:video/'));
     const mediaHtml = isVideo ? 
       `<video src="${m.url}" autoplay loop muted playsinline style="width:100%; height:120px; object-fit:cover; border-radius:8px;"></video>` :
-      `<img src="${m.url}" style="width:100%; height:120px; object-fit:cover; border-radius:8px;"/>`;
+      `<img src="${m.url}" loading="lazy" style="width:100%; height:120px; object-fit:cover; border-radius:8px;" onerror="console.error('Yüklenemedi:',this.src);this.onerror=null;this.style.opacity='0.3';this.style.objectFit='scale-down';this.style.padding='15%';this.src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"%23888\"><path d=\"M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z\"/></svg>')"/>`;
       
     return `
       <div class="pack-item" onclick="selectArchiveMeme('${m.id}')" style="padding:4px; text-align:center; cursor:pointer; background:rgba(255,255,255,0.05); border-radius:8px; transition:transform 0.2s;">

@@ -12,8 +12,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@900&family=Outfit:wght@900&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/style.css">
+<!-- Reklam scriptleri (Head) buraya eklenebilir -->
+<!-- <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script> -->
 </head>
 <body>
+<!-- Reklam scriptleri (Body) buraya eklenebilir -->
 <div style="font-family: 'Montserrat'; font-weight: 900; opacity: 0; position: absolute; pointer-events: none; z-index: -9999;">Force Load Font</div>
 <div class="bg-glow-1"></div>
 <div class="bg-glow-2"></div>
@@ -33,7 +36,7 @@
     <a href="#" class="nav-item" onclick="changeSidebarTab(this, 'help'); return false;"><span class="nav-icon">❓</span> Nasıl Oynanır</a>
     <a href="#" class="nav-item" onclick="openFolderUploadModal(); return false;"><span class="nav-icon">📁</span> Klasör Yükle</a>
   </nav>
-  
+  <div class="ad-container sidebar-ad" style="margin-bottom: 20px;"></div>
 </aside>
 
 <div class="dash-main">
@@ -61,6 +64,7 @@
   <main>
     <div class="game-area">
       <!-- sHome Screen -->
+      <div class="ad-container banner-ad"></div>
       <div id="sHome" class="screen active">
         <div class="home-split-layout">
           <!-- LEFT MAIN COLUMN -->
@@ -472,7 +476,9 @@
 
   <!-- FOOTER -->
   <footer class="dash-footer">
-    <div class="footer-left">
+    <div class="footer-left" style="display:flex; gap:15px; font-size:0.8rem;">
+      <a href="/privacy.html" target="_blank" style="color:var(--muted); text-decoration:none; transition:color 0.3s;" onmouseover="this.style.color='var(--primary-violet)'" onmouseout="this.style.color='var(--muted)'">Gizlilik Politikası</a>
+      <a href="/terms.html" target="_blank" style="color:var(--muted); text-decoration:none; transition:color 0.3s;" onmouseover="this.style.color='var(--primary-violet)'" onmouseout="this.style.color='var(--muted)'">Kullanım Şartları</a>
     </div>
     <div class="footer-center">
       <span>© 2026 GırgırŞamata - Tüm hakları saklıdır.</span>

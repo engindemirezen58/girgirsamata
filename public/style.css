@@ -2086,3 +2086,40 @@ body.game-active .user-profile-pill {
   25% { transform: translateY(-8px) rotate(-5deg); }
   75% { transform: translateY(-8px) rotate(5deg); }
 }
+
+/* ── ADVERTISEMENT CONTAINERS ── */
+.ad-container {
+  width: 100%;
+  min-height: 90px;
+  background: var(--card);
+  border: 1px dashed var(--border-hover);
+  border-radius: var(--r);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 0.8rem;
+  text-align: center;
+  margin: 10px 0;
+  overflow: hidden;
+  position: relative;
+  transition: border-color 0.3s;
+}
+.ad-container:hover {
+  border-color: var(--primary-violet);
+}
+.ad-container::before {
+  content: 'REKLAM ALANI';
+  position: absolute;
+  font-family: 'Space Mono', monospace;
+  letter-spacing: 2px;
+  opacity: 0.2;
+}
+.ad-container.sidebar-ad {
+  min-height: 250px;
+  margin-top: auto;
+}
+.ad-container.banner-ad {
+  max-width: 728px;
+  margin: 0 auto 15px auto;
+}
