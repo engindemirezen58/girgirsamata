@@ -87,8 +87,9 @@ app.use(express.static(PUBLIC_PATH, {
 }));
 
 
-app.use(express.json({ limit: '100mb' }));
-app.use(express.urlencoded({ limit: '100mb', extended: true }));
+app.use(express.json({ limit: '150mb' }));
+app.use(express.urlencoded({ limit: '150mb', extended: true, parameterLimit: 100000 }));
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
 // Sadece API rotalarına genel rate limit uygula
 app.use('/api/', generalLimiter);
@@ -105,40 +106,46 @@ const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, UPLOAD_DIR),
   filename: (req, file, cb) => cb(null, uuidv4() + path.extname(file.originalname).toLowerCase()),
 });
-const upload = multer({ storage, limits: { fileSize: 20 * 1024 * 1024 },
+const upload = multer({ storage, limits: { fileSize: 150 * 1024 * 1024 },
     fileFilter: (req, file, cb) => cb(null, /\.(jpg|jpeg|png|gif|webp|mp4|webm)$/i.test(file.originalname)) });
 
-app.post('/api/upload-pack', apiLimiter, (req, res) => {
-  upload.array('files')(req, res, function (err) {
-    if (err) return res.status(400).json({ success: false, error: err.message });
-    try {
-      const packName = req.body.packName;
-      if (!packName || !req.files || req.files.length === 0) {
-        return res.status(400).json({ success: false, error: 'Pack name or files missing.' });
+app.post('/api/upload-pack', (req, res) => {
+  try {
+    upload.array('files')(req, res, function (err) {
+      if (err) {
+        return res.status(400).json({ success: false, error: err.message });
       }
-      const safeName = slugifyPackName(packName.trim()) || 'pack_' + uuidv4().substring(0, 8);
-      const packDir = path.join(PUBLIC_PATH, 'memes', safeName);
-      if (fs.existsSync(packDir)) {
-        return res.status(400).json({ success: false, error: 'Bu isimde bir paket zaten var.' });
+      try {
+        const packName = req.body.packName;
+        if (!packName || !req.files || req.files.length === 0) {
+          return res.status(400).json({ success: false, error: 'Pack name or files missing.' });
+        }
+        const safeName = slugifyPackName(packName.trim()) || 'pack_' + uuidv4().substring(0, 8);
+        const packDir = path.join(PUBLIC_PATH, 'memes', safeName);
+        if (fs.existsSync(packDir)) {
+          return res.status(400).json({ success: false, error: 'Bu isimde bir paket zaten var.' });
+        }
+        fs.mkdirSync(packDir, { recursive: true });
+        req.files.forEach(file => {
+          const ext = path.extname(file.originalname).toLowerCase();
+          const newFilename = uuidv4() + ext;
+          fs.renameSync(file.path, path.join(packDir, newFilename));
+        });
+        loadMemePacks();
+        const packData = Object.keys(memePacks).map(pn => ({
+          id: pn,
+          count: memePacks[pn].length,
+          previews: memePacks[pn].slice(0, 4).map(m => m.url)
+        }));
+        io.emit("system:packs", packData);
+        res.json({ success: true, packId: safeName });
+      } catch (e) {
+        res.status(500).json({ success: false, error: e.message || 'Bilinmeyen sunucu hatası.' });
       }
-      fs.mkdirSync(packDir, { recursive: true });
-      req.files.forEach(file => {
-        const ext = path.extname(file.originalname).toLowerCase();
-        const newFilename = uuidv4() + ext;
-        fs.renameSync(file.path, path.join(packDir, newFilename));
-      });
-      loadMemePacks();
-      const packData = Object.keys(memePacks).map(pn => ({
-        id: pn,
-        count: memePacks[pn].length,
-        previews: memePacks[pn].slice(0, 4).map(m => m.url)
-      }));
-      io.emit("system:packs", packData);
-      res.json({ success: true, packId: safeName });
-    } catch (e) {
-      res.status(500).json({ success: false, error: e.message || 'Bilinmeyen sunucu hatası.' });
-    }
-  });
+    });
+  } catch (globalErr) {
+    res.status(500).json({ success: false, error: 'Yükleme sırasında beklenmeyen bir hata oluştu.' });
+  }
 });
 
 let memeLibrary = [];
