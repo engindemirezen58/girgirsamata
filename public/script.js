@@ -224,7 +224,7 @@ function drawMeme(canvas, imgSrc, caption, onDone, fixedW, fixedH, style, captio
     canvas.width = 400; canvas.height = 280;
     ctx.fillStyle = '#111'; ctx.fillRect(0,0,400,280);
     ctx.fillStyle = '#444'; ctx.font = '16px Space Grotesk'; ctx.textAlign = 'center';
-    ctx.fillText('GÃ¶rsel yÃ¼klenemedi', 200, 140);
+    ctx.fillText('Görsel yüklenemedi', 200, 140);
     if (onDone) onDone();
   };
   img.src = imgSrc;
@@ -427,7 +427,7 @@ function updateDashboardActiveRooms(list) {
   if (!container) return;
   const filtered = list.slice(0, 3);
   if (!filtered.length) {
-    container.innerHTML = `<div class="active-room-card" style="grid-column: 1/-1; justify-content: center; color:var(--muted); font-size:0.9rem; border-style:dashed;">${window.myLang==='tr'?'AÃ§Ä±k oda yok. Ä°lk sunucuyu sen kur!':'No active rooms.'}</div>`;
+    container.innerHTML = `<div class="active-room-card" style="grid-column: 1/-1; justify-content: center; color:var(--muted); font-size:0.9rem; border-style:dashed;">${window.myLang==='tr'?'Açık oda yok. İlk sunucuyu sen kur!':'No active rooms.'}</div>`;
     return;
   }
   container.innerHTML = filtered.map(s => {
@@ -435,7 +435,7 @@ function updateDashboardActiveRooms(list) {
     const stateText = isLobby ? (window.myLang === 'tr' ? 'KATIL' : 'JOIN') : (window.myLang === 'tr' ? 'OYUNDA' : 'INGAME');
     const stateClass = isLobby ? 'btn-join-room' : 'btn-ingame-room';
     const lobbyStatusBadge = isLobby 
-      ? `<span class="room-status-badge status-lobby">${window.myLang==='tr'?'LOBÄ°':'LOBBY'}</span>`
+      ? `<span class="room-status-badge status-lobby">${window.myLang==='tr'?'LOBİ':'LOBBY'}</span>`
       : `<span class="room-status-badge status-playing">${window.myLang==='tr'?'OYUNDA':'INGAME'}</span>`;
     return `
       <div class="active-room-card">
@@ -465,7 +465,7 @@ function setLang(l){
   const eBtn = document.getElementById('btnEN'); if(eBtn) eBtn.classList.toggle('active',l==='en');
   if(typeof updateTranslations === 'function') updateTranslations();
   
-  // EÄŸer Ã¶zel ekranlar aktifse dinamik iÃ§erikleri tekrar render et
+  // Eğer özel ekranlar aktifse dinamik içerikleri tekrar render et
   if (gameState) {
     if (gameState.state === 'lobby') renderLobby(gameState);
     else if (gameState.state === 'round_summary') renderRoundSummary(gameState, gameState.roundVoteTotals||{});
@@ -489,7 +489,7 @@ function highlightNameInput(inputId) {
 
 function showCreateRoom(){
   if(!getPlayerName()){highlightNameInput('inputName');return;}
-  const req = { playerName:getPlayerName(), serverName: getPlayerName() + (myLang==='tr'?' OdasÄ±':' Room'), lang:myLang, password:null, maxRounds:3, writingTime:60, votingTime:20, changeAllowed:true, changeCount:5, memePack: availablePacks.length > 0 ? availablePacks[0].id : "default" };
+  const req = { playerName:getPlayerName(), serverName: getPlayerName() + (myLang==='tr'?' Odası':' Room'), lang:myLang, password:null, maxRounds:3, writingTime:60, votingTime:20, changeAllowed:true, changeCount:5, memePack: availablePacks.length > 0 ? availablePacks[0].id : "default" };
   socket.emit('community:create', req);
 }
 
@@ -536,7 +536,7 @@ function openBrowseModal() {
 }
 function loadCommunityListBrowse() { socket._browsePending = true; socket.emit('community:list'); }
 
-// â”€â”€ STREAMER MODE â”€â”€
+// ── STREAMER MODE ──
 function toggleStreamerPanel() {
   const panel = document.getElementById('streamerPanel');
   if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -545,7 +545,7 @@ function toggleStreamerPanel() {
 function toggleStreamerMode() {
   if (!gameState || gameState.host !== myId) return;
   if (gameState.gameMode === 'king_long_live') {
-    toast(myLang === 'tr' ? "Kral Ã‡ok YaÅŸa modunda yayÄ±ncÄ± modu aÃ§Ä±lamaz." : "Streamer mode is disabled in King mode.");
+    toast(myLang === 'tr' ? "Kral Çok Yaşa modunda yayıncı modu açılamaz." : "Streamer mode is disabled in King mode.");
     return;
   }
   const newVal = !gameState.streamerMode;
@@ -573,12 +573,12 @@ function filterPlayersGrid(query) {
 function renderBrowseList(list) {
   const el = document.getElementById('browseServerList');
   if (!el) return;
-  if (!list.length) { el.innerHTML = `<p class="muted" style="text-align:center;padding:20px">${myLang==='tr'?'AÃ§Ä±k sunucu yok. Ä°lk sunucuyu sen kur!':'No open servers. Create the first one!'}</p>`; return; }
+  if (!list.length) { el.innerHTML = `<p class="muted" style="text-align:center;padding:20px">${myLang==='tr'?'Açık sunucu yok. İlk sunucuyu sen kur!':'No open servers. Create the first one!'}</p>`; return; }
   el.innerHTML = list.map(s => `
     <div class="server-card">
       <div>
         <div class="s-title">${esc(s.name)} ${!s.isPublic?`<span style="font-size:.7rem;color:var(--muted2);font-family:Space Mono,monospace">[${t('closed').toLocaleUpperCase('tr-TR')}]</span>`:''}</div>
-        <div class="s-meta">${s.players}/${s.maxPlayers} ${myLang==='tr'?'oyuncu':'players'} Â· ${s.maxRounds} ${t('settingRounds').toLowerCase()} Â· ${esc(s.hostName||'')}</div>
+        <div class="s-meta">${s.players}/${s.maxPlayers} ${myLang==='tr'?'oyuncu':'players'} · ${s.maxRounds} ${t('settingRounds').toLowerCase()} · ${esc(s.hostName||'')} </div>
       </div>
       <div class="flex-h">
         <span class="server-state ${s.state==='lobby'?'state-lobby':'state-playing'}">${s.state==='lobby'?t('lobbyPhase'):(myLang==='tr'?'OYNUYOR':'PLAYING')}</span>
@@ -593,8 +593,8 @@ socket.on('community:list', list => {
     const col = document.getElementById('quickGameCol'); const icon = document.getElementById('quickGameIcon');
     if(col) col.classList.remove('loading'); if(icon) icon.style.display = '';
     const open = list.find(s => s.state === 'lobby' && s.isPublic && s.players < s.maxPlayers);
-    if (open) { toast(myLang==='tr'?'AÃ§Ä±k oda bulundu, katÄ±lÄ±yorsunâ€¦':'Found open room, joiningâ€¦'); joinCommunity(open.id, false); }
-    else { toast(myLang==='tr'?'Bekleyen aÃ§Ä±k oda yok. Oda Kur tuÅŸunu kullan!':'No open rooms waiting. Use Create Room!'); }
+    if (open) { toast(myLang==='tr'?'Açık oda bulundu, katılıyorsun...':'Found open room, joining...'); joinCommunity(open.id, false); }
+    else { toast(myLang==='tr'?'Bekleyen açık oda yok. Oda Kur tuşunu kullan!':'No open rooms waiting. Use Create Room!'); }
     return;
   }
   if (socket._browsePending) { socket._browsePending = false; renderBrowseList(list); return; }
@@ -623,7 +623,7 @@ function renderLobby(state) {
   const codeEl = document.getElementById('lobbyCode');
   if (codeEl) {
     if(codeEl.textContent !== '****' && codeEl.textContent !== state.code && codeEl.textContent !== state.id) {
-      codeEl.textContent = '****'; // Oda deÄŸiÅŸmiÅŸse gizle
+      codeEl.textContent = '****'; // Oda değişmişse gizle
     }
   }
   
@@ -641,14 +641,14 @@ function renderLobby(state) {
     const tog = document.getElementById('streamerModeToggle');
     if (tog) {
       if (state.gameMode === 'king_long_live') {
-        tog.textContent = 'â¬œ YayÄ±ncÄ± Modu (Kral Modunda KapalÄ±)';
+        tog.textContent = '\u2B1C Yayıncı Modu (Kral Modunda Kapalı)';
         tog.style.background = 'rgba(168,85,247,0.1)';
         tog.style.borderColor = 'rgba(168,85,247,0.2)';
         tog.style.color = 'rgba(168,85,247,0.4)';
         tog.disabled = true;
         tog.style.cursor = 'not-allowed';
       } else {
-        tog.textContent = isStreamer ? 'ğŸŸ£ YayÄ±ncÄ± Modu: AÃ‡IK' : 'â¬œ YayÄ±ncÄ± Modu: KAPALI';
+        tog.textContent = isStreamer ? '\u{1F7E3} Yayıncı Modu: AÇIK' : '\u2B1C Yayıncı Modu: KAPALI';
         tog.style.background = isStreamer ? 'rgba(168,85,247,0.4)' : 'rgba(168,85,247,0.15)';
         tog.style.borderColor = isStreamer ? '#a855f7' : 'rgba(168,85,247,0.5)';
         tog.style.color = isStreamer ? '#e9d5ff' : '#c084fc';
@@ -672,11 +672,11 @@ function renderLobby(state) {
 
   document.getElementById('playersGrid').innerHTML = state.players.map(p => {
     const pIsViewer = (state.viewers || []).includes(p.id);
-    const roleBadge = pIsViewer ? `<span style="font-size:0.6rem; padding:1px 5px; border-radius:4px; background:rgba(168,85,247,0.3); color:#c084fc; margin-left:4px;">ğŸ‘  Ä°zl</span>` : `<span style="font-size:0.6rem; padding:1px 5px; border-radius:4px; background:rgba(74,222,128,0.2); color:#4ade80; margin-left:4px;">ğŸŽ® Oyn</span>`;
+    const roleBadge = pIsViewer ? `<span style="font-size:0.6rem; padding:1px 5px; border-radius:4px; background:rgba(168,85,247,0.3); color:#c084fc; margin-left:4px;">\u{1F465} İzl</span>` : `<span style="font-size:0.6rem; padding:1px 5px; border-radius:4px; background:rgba(74,222,128,0.2); color:#4ade80; margin-left:4px;">\u{1F3AE} Oyn</span>`;
     const showRoleBadge = isStreamer;
     const rightPad = (isHost && p.id !== myId) ? '120px' : '13px';
     const isKing = state.gameMode === 'king_long_live' && state.kingId === p.id;
-    const kingBadgeHtml = isKing ? `<span class="king-badge">ğŸ‘‘ Kral</span>` : '';
+    const kingBadgeHtml = isKing ? `<span class="king-badge">\u{1F451} Kral</span>` : '';
     return `
     <div class="player-chip${p.isHost?' is-host':''}" style="position:relative; padding-right:${rightPad}">
       ${esc(p.name)}${p.id===myId?` <small style="opacity:.5">${t('youText')}</small>`:''}
@@ -684,7 +684,7 @@ function renderLobby(state) {
       ${kingBadgeHtml}
       ${(isHost && p.id !== myId) ? `
         <div style="position:absolute; right:4px; top:50%; transform:translateY(-50%); display:flex; gap:4px;">
-          ${isStreamer ? `<button style="padding:4px 6px; display:flex; align-items:center; justify-content:center; border-radius:4px; border:none; background:rgba(168,85,247,0.4); color:#c084fc; cursor:pointer;" onclick="toggleViewerRole('${p.id}', ${pIsViewer})" title="${pIsViewer ? 'Oyuncu Yap' : 'Ä°zleyici Yap'}">${pIsViewer ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>' : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>'}</button>` : ''}
+          ${isStreamer ? `<button style="padding:4px 6px; display:flex; align-items:center; justify-content:center; border-radius:4px; border:none; background:rgba(168,85,247,0.4); color:#c084fc; cursor:pointer;" onclick="toggleViewerRole('${p.id}', ${pIsViewer})" title="${pIsViewer ? 'Oyuncu Yap' : 'İzleyici Yap'}">${pIsViewer ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>' : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>'}</button>` : ''}
           <button class="btn btn-red" style="padding:4px 6px; display:flex; align-items:center; justify-content:center; border-radius:4px;" onclick="kickPlayer('${p.id}')" title="Kick"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg></button>
           <button class="btn btn-red" style="padding:4px 6px; display:flex; align-items:center; justify-content:center; border-radius:4px; background:#991b1b;" onclick="banPlayer('${p.id}')" title="Ban"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg></button>
         </div>
@@ -737,7 +737,7 @@ function renderLobby(state) {
             <option value="topic_mode" ${s.gameMode==='topic_mode'?'selected':''}>${t('gameModeTopic')}</option>
             <option value="custom_mode" ${s.gameMode==='custom_mode'?'selected':''}>${t('gameModeCustom')}</option>
             <option value="meme_hunter" ${s.gameMode==='meme_hunter'?'selected':''}>${t('gameModeMemeHunter')}</option>
-            <option value="king_long_live" ${s.gameMode==='king_long_live'?'selected':''}>${t('gameModeKingLongLive') || 'Kral Ã‡ok YaÅŸa!'}</option>
+            <option value="king_long_live" ${s.gameMode==='king_long_live'?'selected':''}>${t('gameModeKingLongLive') || 'Kral Çok Yaşa!'}</option>
           </select>
         </div>
         <div style="margin-bottom:4px;"><label style="display:block; font-size:0.75rem; color:var(--muted); font-weight:700; margin-bottom:2px;">${t('settingPasswordLong')}</label>
@@ -749,11 +749,11 @@ function renderLobby(state) {
         <div style="margin-bottom:4px;"><label style="display:block; font-size:0.75rem; color:var(--muted); font-weight:700; margin-bottom:2px;">${t('settingChangeLong')}</label><div class="range-row"><input type="range" id="ls_change" min="0" max="30" value="${!s.changeAllowed?0:s.changeCount}" oninput="document.getElementById('ls_change_v').textContent=this.value=='0'?'${t('closed')}':this.value;sendSettings()"/><span class="range-val" id="ls_change_v" style="font-size:0.75rem; color:var(--text);">${!s.changeAllowed||s.changeCount==0?t('closed'):s.changeCount}</span></div></div>
         <div style="margin-top:6px; margin-bottom:2px; padding:6px 10px; background:rgba(255,255,255,0.05); border-radius:8px; border:1px solid rgba(255,255,255,0.1);">
           <label style="display:flex; justify-content:space-between; align-items:center; font-size:0.95rem; color:var(--text); font-weight:800; cursor:pointer;">
-            <span>${myLang === 'tr' ? 'ğŸ—‘ï¸  Ã‡Ã¶p butonu' : 'ğŸ—‘ï¸  Trash Button'}</span>
+            <span>${myLang === 'tr' ? '\u{1F5D1}\uFE0F Çöp butonu' : '\u{1F5D1}\uFE0F Trash Button'}</span>
             <input type="checkbox" id="ls_trash" ${s.trashAllowed === false ? '' : 'checked'} onchange="document.getElementById('trash_info').style.display=this.checked?'block':'none'; sendSettings()" style="width:18px; height:18px; cursor:pointer; accent-color:var(--red);">
           </label>
           <div id="trash_info" style="margin-top:4px; font-size:0.75rem; color:var(--muted); font-weight:600; line-height:1.2; display:${s.trashAllowed === false ? 'none' : 'block'};">
-            ${myLang === 'tr' ? 'Aktif olduÄŸunda oylama ekranÄ±nda Ã§Ã¶p butonu belirir. Ã‡oÄŸunluk bir memeye Ã§Ã¶p oyu verirse, o oyuncu o tur iÃ§in -150 puan ceza alÄ±r. Herkes tur baÅŸÄ±na 1 Ã§Ã¶p oyu hakkÄ±na sahiptir.' : 'When active, a trash button appears on the voting screen. If the majority votes trash on a meme, that player gets a -150 point penalty for the round. Each player has 1 trash vote per round.'}
+            ${myLang === 'tr' ? 'Aktif olduğunda oylama ekranında çöp butonu belirir. Çoğunluk bir memeye çöp oyu verirse, o oyuncu o tur için -150 puan ceza alır. Herkes tur başına 1 çöp oyu hakkına sahiptir.' : 'When active, a trash button appears on the voting screen. If the majority votes trash on a meme, that player gets a -150 point penalty for the round. Each player has 1 trash vote per round.'}
           </div>
         </div>
       </div>`;
@@ -777,12 +777,12 @@ function renderLobby(state) {
         </div>
       </div>
       <div class="settings-grid">
-        <div class="settings-cell"><div class="settings-cell-label">${t('settingGameMode')}</div><div class="settings-cell-val" style="font-size:0.9rem;">${s.gameMode === 'topic_mode' ? t('gameModeTopic') : (s.gameMode === 'custom_mode' ? t('gameModeCustom') : (s.gameMode === 'meme_hunter' ? t('gameModeMemeHunter') : (s.gameMode === 'king_long_live' ? (t('gameModeKingLongLive') || 'Kral Ã‡ok YaÅŸa!') : t('gameModeClassic'))))}</div></div>
+        <div class="settings-cell"><div class="settings-cell-label">${t('settingGameMode')}</div><div class="settings-cell-val" style="font-size:0.9rem;">${s.gameMode === 'topic_mode' ? t('gameModeTopic') : (s.gameMode === 'custom_mode' ? t('gameModeCustom') : (s.gameMode === 'meme_hunter' ? t('gameModeMemeHunter') : (s.gameMode === 'king_long_live' ? (t('gameModeKingLongLive') || 'Kral Çok Yaşa!') : t('gameModeClassic'))))}</div></div>
         <div class="settings-cell"><div class="settings-cell-label">${t('settingRounds')}</div><div class="settings-cell-val">${s.maxRounds}</div></div>
         <div class="settings-cell"><div class="settings-cell-label">${t('settingWrite')}</div><div class="settings-cell-val">${s.writingTime}s</div></div>
         <div class="settings-cell"><div class="settings-cell-label">${t('settingVote')}</div><div class="settings-cell-val">${s.votingTime}s</div></div>
-        <div class="settings-cell"><div class="settings-cell-label">${t('settingChange')}</div><div class="settings-cell-val">${s.changeAllowed?s.changeCount+'x':'â€”'}</div></div>
-        <div class="settings-cell"><div class="settings-cell-label">${myLang === 'tr' ? 'Ã‡Ã¶p' : 'Trash'}</div><div class="settings-cell-val">${s.trashAllowed === false ? t('closed') : 'AÃ§Ä±k'}</div></div>
+        <div class="settings-cell"><div class="settings-cell-label">${t('settingChange')}</div><div class="settings-cell-val">${s.changeAllowed?s.changeCount+'x':'—'}</div></div>
+        <div class="settings-cell"><div class="settings-cell-label">${myLang === 'tr' ? 'Çöp' : 'Trash'}</div><div class="settings-cell-val">${s.trashAllowed === false ? t('closed') : 'Açık'}</div></div>
       </div>`;
   }
 }
@@ -880,7 +880,7 @@ function renderWriting(state){
     const waitTitle = document.querySelector('#writingWaitingCard h3');
     if(waitTitle) waitTitle.textContent = "Kral Bekliyor...";
     const waitSub = document.querySelector('#writingWaitingCard p');
-    if(waitSub) waitSub.textContent = "(Halk capsleri hazÄ±rlarken kral tahtÄ±nda dinleniyor)";
+    if(waitSub) waitSub.textContent = "(Halk capsleri hazırlarken kral tahtında dinleniyor)";
     
     document.getElementById('wRound').textContent=`${t('roundText')} ${state.round}/${state.maxRounds}`;
     document.getElementById('wBar').style.width='100%'; 
@@ -909,7 +909,7 @@ function renderWriting(state){
     document.getElementById('textControls3').style.display = 'none';
     document.getElementById('btnAddText').style.display = 'none';
     const capLabel = document.querySelector('#writingControlsCard .card-label');
-    if (capLabel) capLabel.textContent = window.myLang === 'tr' ? "GÃ¶rselini SeÃ§ ve GÃ¶nder" : "Select and Submit Image";
+    if (capLabel) capLabel.textContent = window.myLang === 'tr' ? "Görselini Seç ve Gönder" : "Select and Submit Image";
     const mc = document.getElementById('memeHandContainer');
     if(mc) mc.style.display = 'block';
   } else {
@@ -941,7 +941,7 @@ function renderWriting(state){
   const cb = document.getElementById('btnChange'); const cbBadge = document.getElementById('changeCountBadge');
   if(state.changeAllowed && state.gameMode !== 'meme_hunter'){ cb.style.display=''; cb.disabled=false; cb.textContent=t('changeMemeBtn'); cbBadge.style.display=''; cbBadge.textContent=changeRemaining+' '+t('rightsLeft'); }
   else { cb.style.display='none'; cbBadge.style.display='none'; }
-  // (ArtÄ±k gÃ¶rselin silinmesine gerek yok, game:your_meme olayÄ± doÄŸrudan gÃ¼ncelliyor)
+  // (Artık görselin silinmesine gerek yok, game:your_meme olayı doğrudan güncelliyor)
 }
 
 let hasSubmittedTopic = false;
@@ -1027,11 +1027,11 @@ function renderModalMemes(query) {
   });
   
   if (filtered.length === 0) {
-    container.innerHTML = `<p class="muted" style="text-align:center; grid-column:1/-1;">SonuÃ§ bulunamadÄ±.</p>`;
+    container.innerHTML = `<p class="muted" style="text-align:center; grid-column:1/-1;">Sonuç bulunamadı.</p>`;
     return;
   }
   
-  // Sadece ilk 100 sonucu gÃ¶sterelim (performans iÃ§in)
+  // Sadece ilk 100 sonucu gösterelim (performans için)
   filtered = filtered.slice(0, 100);
   
   container.innerHTML = filtered.map(m => {
@@ -1354,7 +1354,7 @@ function renderGameover(state){
   const c3 = p3 ? ((state.scores[p3.id]||0)>0?'var(--green)':(state.scores[p3.id]||0)<0?'var(--red)':'inherit') : '';
 
   if(p2) html += `<div class="podium-col podium-2"><div class="podium-name">${esc(p2.name)}</div><div class="podium-pts" style="color:${c2}">${state.scores[p2.id]||0}</div><div class="podium-bar">2</div></div>`;
-  if(p1) html += `<div class="podium-col podium-1"><div class="podium-name" style="font-size:1.1rem;color:var(--yellow)">${esc(p1.name)} ğŸ‘‘</div><div class="podium-pts" style="color:${c1}">${state.scores[p1.id]||0}</div><div class="podium-bar">1</div></div>`;
+  if(p1) html += `<div class="podium-col podium-1"><div class="podium-name" style="font-size:1.1rem;color:var(--yellow)">${esc(p1.name)} \u{1F451}</div><div class="podium-pts" style="color:${c1}">${state.scores[p1.id]||0}</div><div class="podium-bar">1</div></div>`;
   if(p3) html += `<div class="podium-col podium-3"><div class="podium-name">${esc(p3.name)}</div><div class="podium-pts" style="color:${c3}">${state.scores[p3.id]||0}</div><div class="podium-bar">3</div></div>`;
   html += '</div><div class="final-list">';
   
@@ -1443,7 +1443,7 @@ socket.on('game:state', state => {
     // During writing/topic phases, show viewer waiting screen
     show('Spectator');
     const msg = document.getElementById('spectatorMsg');
-    if (msg) msg.textContent = (myLang === 'tr' ? 'Oyuncular capslarÄ±nÄ± hazÄ±rlÄ±yor, oylama iÃ§in bekleyinâ€¦' : 'Players are creating captions, wait for votingâ€¦');
+    if (msg) msg.textContent = (myLang === 'tr' ? 'Oyuncular capslarını hazırlıyor, oylama için bekleyin...' : 'Players are creating captions, wait for voting...');
     return;
   }
 
@@ -1594,7 +1594,7 @@ socket.on('game:your_meme',({meme,topic,remaining})=>{
 
 
 socket.on('game:your_meme_hand', ({memes, topic, remaining}) => {
-  myMeme = memes[0]; // VarsayÄ±lan olarak ilkini seÃ§
+  myMeme = memes[0]; // Varsayılan olarak ilkini seç
   window.selectedMemeForHunter = memes[0];
   
   const topicBanner = document.getElementById('writingTopicBanner');
@@ -1611,12 +1611,12 @@ socket.on('game:your_meme_hand', ({memes, topic, remaining}) => {
       const isVideo = /\.(mp4|webm|mov)$/i.test(m.url) || (typeof m.url === 'string' && m.url.startsWith('data:video/'));
       
       if (isVideo) {
-        // Video iÃ§in: canvas ile ilk kareyi Ã§Ä±kar, img olarak gÃ¶ster
+        // Video için: canvas ile ilk kareyi çıkar, img olarak göster
         const el = document.createElement('img');
         el.className = 'meme-hand-item' + (idx === 0 ? ' active' : '');
         el.style.background = '#222';
         
-        // Gizli video ile ilk kareyi Ã§ek
+        // Gizli video ile ilk kareyi çek
         const tempVid = document.createElement('video');
         tempVid.muted = true;
         tempVid.playsInline = true;
@@ -1632,7 +1632,7 @@ socket.on('game:your_meme_hand', ({memes, topic, remaining}) => {
             cvs.height = tempVid.videoHeight || 240;
             cvs.getContext('2d').drawImage(tempVid, 0, 0, cvs.width, cvs.height);
             el.src = cvs.toDataURL('image/jpeg', 0.8);
-          } catch(e) { /* tarayÄ±cÄ± izin vermezse boÅŸ kalÄ±r */ }
+          } catch(e) { /* tarayıcı izin vermezse boş kalır */ }
           tempVid.src = '';
           tempVid.load();
         }, {once: true});
@@ -1648,7 +1648,7 @@ socket.on('game:your_meme_hand', ({memes, topic, remaining}) => {
         };
         container.appendChild(el);
       } else {
-        // Resim iÃ§in: normal img
+        // Resim için: normal img
         const el = document.createElement('img');
         el.className = 'meme-hand-item' + (idx === 0 ? ' active' : '');
         el.src = m.url;
@@ -1793,7 +1793,7 @@ window.banPlayer = function(id) {
   }
 };
 
-// â”€â”€ Keyboard vote shortcuts for streamer chat mode (1/2/3) â”€â”€
+// ── Keyboard vote shortcuts for streamer chat mode (1/2/3) ──
 document.addEventListener('keydown', (e) => {
   if (!gameState || gameState.state !== 'showcase') return;
   if (['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)) return;
@@ -1916,7 +1916,7 @@ window.handlePackFolderUpload = async function(e) {
   const folderName = rawName || firstPath.split('/')[0] || 'YeniPaket';
   
   if (availablePacks && availablePacks.some(p => p.id.toLowerCase() === folderName.toLowerCase())) {
-    toast(window.myLang === 'tr' ? 'Bu isimde bir paket zaten var! BaÅŸka bir isim girin.' : 'Pack name already exists!');
+    toast(window.myLang === 'tr' ? 'Bu isimde bir paket zaten var! Başka bir isim girin.' : 'Pack name already exists!');
     e.target.value = '';
     return;
   }
@@ -1932,18 +1932,18 @@ window.handlePackFolderUpload = async function(e) {
   }
 
   if (totalSize > 150 * 1024 * 1024) {
-    toast(window.myLang === 'tr' ? 'KlasÃ¶r boyutu Ã§ok bÃ¼yÃ¼k! En fazla 150 MB yÃ¼kleyebilirsiniz.' : 'Folder size too large! Max 150 MB allowed.');
+    toast(window.myLang === 'tr' ? 'Klasör boyutu çok büyük! En fazla 150 MB yükleyebilirsiniz.' : 'Folder size too large! Max 150 MB allowed.');
     e.target.value = '';
     return;
   }
 
   if (validFiles.length === 0) {
-    toast(window.myLang === 'tr' ? 'KlasÃ¶rde uygun resim/video bulunamadÄ±!' : 'No valid images/videos found in folder!');
+    toast(window.myLang === 'tr' ? 'Klasörde uygun resim/video bulunamadı!' : 'No valid images/videos found in folder!');
     e.target.value = '';
     return;
   }
 
-  toast(window.myLang === 'tr' ? `Paket yÃ¼kleniyor (${validFiles.length} dosya)...` : `Uploading pack (${validFiles.length} files)...`);
+  toast(window.myLang === 'tr' ? `Paket yükleniyor (${validFiles.length} dosya)...` : `Uploading pack (${validFiles.length} files)...`);
   closeModal('modalUploadFolder');
   
   const formData = new FormData();
@@ -1957,7 +1957,7 @@ window.handlePackFolderUpload = async function(e) {
     });
     const data = await res.json();
     if (data.success) {
-      toast(window.myLang === 'tr' ? 'Paket baÅŸarÄ±yla yÃ¼klendi!' : 'Pack uploaded successfully!');
+      toast(window.myLang === 'tr' ? 'Paket başarıyla yüklendi!' : 'Pack uploaded successfully!');
       setTimeout(() => {
         const packEl = document.getElementById('setting_memePack');
         if (packEl) {
@@ -1972,7 +1972,7 @@ window.handlePackFolderUpload = async function(e) {
     }
   } catch (err) {
     console.error(err);
-    toast(window.myLang === 'tr' ? 'YÃ¼kleme hatasÄ±!' : 'Upload error!');
+    toast(window.myLang === 'tr' ? 'Yükleme hatası!' : 'Upload error!');
   }
   e.target.value = '';
 };
