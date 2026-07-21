@@ -7,7 +7,11 @@ const { v4: uuidv4 } = require("uuid");
 const fs = require("fs");
 const ffmpeg = require("fluent-ffmpeg");
 const ffmpegPath = require("ffmpeg-static");
-ffmpeg.setFfmpegPath(ffmpegPath);
+if (ffmpegPath && fs.existsSync(ffmpegPath)) {
+  ffmpeg.setFfmpegPath(ffmpegPath);
+} else {
+  console.warn("ffmpeg-static binary bulunamadı, sistemdeki ffmpeg kullanılacak.");
+}
 const rateLimit = require("express-rate-limit");
 const app = express();
 app.set('trust proxy', 1); // Get real IP behind Cloudflare/Nginx
