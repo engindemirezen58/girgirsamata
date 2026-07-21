@@ -1394,8 +1394,21 @@ function renderGameover(state){
   document.getElementById('finalList').innerHTML = html;
   document.getElementById('btnRestart').style.display=state.host===myId?'':'none';
 }
-function restartGame(){ socket.emit('game:restart',{roomCode:myRoomCode}); }
+function triggerVignetteAd() {
+  try {
+    let s = document.createElement('script');
+    s.dataset.zone = '11368183';
+    s.src = 'https://n6wxm.com/vignette.min.js';
+    document.body.appendChild(s);
+  } catch(e) {}
+}
+
+function restartGame(){ 
+  triggerVignetteAd();
+  socket.emit('game:restart',{roomCode:myRoomCode}); 
+}
 function goHome(){
+  triggerVignetteAd();
   myRoomCode=null;
   gameState=null;
   show('Home');
