@@ -1906,6 +1906,18 @@ window.openFolderUploadModal = function() {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
+  // Check cookie consent
+  if (!localStorage.getItem('gs_cookie_consent')) {
+    const banner = document.getElementById('cookieBanner');
+    if (banner) {
+      banner.style.display = 'flex';
+      document.getElementById('acceptCookiesBtn').addEventListener('click', () => {
+        localStorage.setItem('gs_cookie_consent', 'true');
+        banner.style.display = 'none';
+      });
+    }
+  }
+
   const dropZone = document.getElementById('uploadDropZone');
   if (dropZone) {
     dropZone.addEventListener('dragover', (e) => {
