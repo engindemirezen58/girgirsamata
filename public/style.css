@@ -2743,47 +2743,4 @@ body.game-active .user-profile-pill {
   margin: 0 auto 15px auto;
 }
 @media (max-width: 768px) { .bg-glow-1, .bg-glow-2, .bg-glow-3 { display: none !important; } } 
-@media (max-width: 992px) { .dash-sidebar .ad-container { display: none !important; } } 
-
-/* Cookie Banner */
-.cookie-banner {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  background: rgba(15, 15, 20, 0.95);
-  backdrop-filter: blur(10px);
-  color: var(--text-inverse);
-  padding: 15px 20px;
-  z-index: 9999;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  box-shadow: 0 -4px 15px rgba(0,0,0,0.5);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-.cookie-content {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  max-width: 1200px;
-  gap: 20px;
-}
-.cookie-content span {
-  font-size: 0.9rem;
-  line-height: 1.4;
-}
-.cookie-content a {
-  color: var(--primary-violet);
-  text-decoration: underline;
-}
-.cookie-content button {
-  white-space: nowrap;
-}
-@media (max-width: 768px) {
-  .cookie-content {
-    flex-direction: column;
-    text-align: center;
-  }
-}
+@media (max-width: 992px) { .dash-sidebar .ad-container { display: none !important; } }

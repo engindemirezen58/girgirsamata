@@ -569,13 +569,25 @@
   </div>
 </div>
 
-<div id="cookieBanner" class="cookie-banner" style="display: none;">
-  <div class="cookie-content">
-    <span>Deneyiminizi geliştirmek ve kişiselleştirilmiş reklamlar sunmak için çerezleri kullanıyoruz. Sitemizi kullanarak <a href="/privacy.html" target="_blank">Gizlilik Politikamızı</a> kabul etmiş olursunuz.</span>
-    <button id="acceptCookiesBtn" class="btn btn-primary">Anladım</button>
-  </div>
-</div>
-
+          <!-- Cookie Consent Banner -->
+<script src="https://cdn.jsdelivr.net/gh/allink/cookieconsent@1.0.0/build/cookieconsent.min.js"></script>
+<script>
+  window.addEventListener("load", function(){
+    window.cookieconsent.initialise({
+      "palette": {
+        "popup": { "background": "#252e39" },
+        "button": { "background": "#14a76c" }
+      },
+      "theme": "edgeless",
+      "content": {
+        "message": "Sitemizde deneyiminizi iyileştirmek ve reklam sunmak için çerezler kullanılmaktadır.",
+        "dismiss": "Anladım / Kabul Et",
+        "link": "Gizlilik Politikası",
+        "href": "/privacy.html"
+      }
+    });
+  });
+</script>
 <script src="script.js"></script>
 </body>
 </html>

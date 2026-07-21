@@ -2024,22 +2024,3 @@ function updateKingManualPickUI(players) {
     return `<button class="king-player-pick-btn ${isSel?'active':''}" onclick="setKing('${p.id}')">${esc(p.name)}</button>`;
   }).join('');
 }
-
-
-
-
-
-// Cookie Consent Banner Initialization
-(function initCookieBanner() {
-  if (!localStorage.getItem('gs_cookie_consent')) {
-    const banner = document.getElementById('cookieBanner');
-    const btn = document.getElementById('acceptCookiesBtn');
-    if (banner && btn) {
-      banner.style.display = 'flex';
-      btn.addEventListener('click', () => {
-        localStorage.setItem('gs_cookie_consent', 'true');
-        banner.style.display = 'none';
-      });
-    }
-  }
-})();
