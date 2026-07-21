@@ -16,6 +16,43 @@
     a { color: var(--primary-sky); text-decoration: none; }
     a:hover { text-decoration: underline; }
   </style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.1.1/cookieconsent.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.1.1/cookieconsent.min.js"></script>
+<script>
+  window.addEventListener("load", function(){
+    if (window.cookieconsent) {
+      window.cookieconsent.initialise({
+        "palette": {
+          "popup": { "background": "#252e39" },
+          "button": { "background": "#14a76c" }
+        },
+        "theme": "edgeless",
+        "content": {
+          "message": "Sitemizde deneyiminizi iyileştirmek ve reklam sunmak için çerezler kullanılmaktadır.",
+          "dismiss": "Anladım / Kabul Et",
+          "link": "Gizlilik Politikası",
+          "href": "/privacy.html"
+        }
+      });
+    }
+  });
+</script>
+
+<!-- Sekme İkonu (Favicon) -->
+<link rel="icon" type="image/png" href="/favicon.png">
+
+<!-- Sosyal Medya ve Link Önizleme (Open Graph) Metaları -->
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://girgirsamata.com/" />
+<meta property="og:title" content="Gırgır Şamata - Eğlenceli Meme ve Parti Oyunu" />
+<meta property="og:description" content="Arkadaşlarınla veya yayınlarda oynayabileceğin en makara meme oyunu!" />
+<meta property="og:image" content="https://girgirsamata.com/og-banner.jpg" />
+
+<!-- Twitter / X Kart Yapısı -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Gırgır Şamata - Eğlenceli Meme Oyunu" />
+<meta name="twitter:description" content="Arkadaşlarınla hemen oyna!" />
+<meta name="twitter:image" content="https://girgirsamata.com/og-banner.jpg" />
 </head>
 <body>
   <div class="content-box">

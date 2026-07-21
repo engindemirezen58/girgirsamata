@@ -21,8 +21,15 @@ async function downloadMeme(imgSrc, caption, style, caption2, style2, filename, 
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ videoUrl: imgSrc, caption, style, caption2, style2, caption3, style3 })
     })
-    .then(response => {
-      if (!response.ok) throw new Error('Render hatası');
+    .then(async response => {
+      if (!response.ok) {
+        let errStr = `Render hatası (HTTP ${response.status})`;
+        try {
+          const errJson = await response.json();
+          if (errJson.error) errStr = errJson.error;
+        } catch(e) {}
+        throw new Error(errStr);
+      }
       return response.blob();
     })
     .then(blob => {
@@ -38,7 +45,7 @@ async function downloadMeme(imgSrc, caption, style, caption2, style2, filename, 
     })
     .catch(err => {
       console.error(err);
-      if(typeof toast === 'function') toast(window.myLang === 'tr' ? 'İndirme sırasında bir hata oluştu.' : 'An error occurred during download.', 3000);
+      if(typeof toast === 'function') toast(window.myLang === 'tr' ? `Hata: ${err.message}` : `Error: ${err.message}`, 4000);
     });
     return;
   }

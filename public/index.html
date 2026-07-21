@@ -15,7 +15,43 @@
 <link rel="stylesheet" href="/style.css">
 <!-- Reklam scriptleri (Head) buraya eklenebilir -->
 <!-- <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script> -->
-<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.1.1/cookieconsent.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.1.1/cookieconsent.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.1.1/cookieconsent.min.js"></script>
+<script>
+  window.addEventListener("load", function(){
+    if (window.cookieconsent) {
+      window.cookieconsent.initialise({
+        "palette": {
+          "popup": { "background": "#252e39" },
+          "button": { "background": "#14a76c" }
+        },
+        "theme": "edgeless",
+        "content": {
+          "message": "Sitemizde deneyiminizi iyileştirmek ve reklam sunmak için çerezler kullanılmaktadır.",
+          "dismiss": "Anladım / Kabul Et",
+          "link": "Gizlilik Politikası",
+          "href": "/privacy.html"
+        }
+      });
+    }
+  });
+</script>
+
+<!-- Sekme İkonu (Favicon) -->
+<link rel="icon" type="image/png" href="/favicon.png">
+
+<!-- Sosyal Medya ve Link Önizleme (Open Graph) Metaları -->
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://girgirsamata.com/" />
+<meta property="og:title" content="Gırgır Şamata - Eğlenceli Meme ve Parti Oyunu" />
+<meta property="og:description" content="Arkadaşlarınla veya yayınlarda oynayabileceğin en makara meme oyunu!" />
+<meta property="og:image" content="https://girgirsamata.com/og-banner.jpg" />
+
+<!-- Twitter / X Kart Yapısı -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Gırgır Şamata - Eğlenceli Meme Oyunu" />
+<meta name="twitter:description" content="Arkadaşlarınla hemen oyna!" />
+<meta name="twitter:image" content="https://girgirsamata.com/og-banner.jpg" />
 </head>
 <body>
 <!-- Reklam scriptleri (Body) buraya eklenebilir -->
@@ -522,12 +558,14 @@
     </div>
     <div id="uploadDropZone" class="upload-drop-zone" onclick="document.getElementById('packUploadInput').click()">
       <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.7; margin-bottom:10px;"><path d="M21.2 15c.7-1.2 1-2.5.7-3.9-.6-2-2.4-3.5-4.4-3.5h-1.2c-.7-3-3.2-5.2-6.2-5.6-3-.3-5.9 1.3-7.3 4-1.2 2.5-1 6.5.5 8.8m8.7-1.6V21"/><path d="M16 16l-4-4-4 4"/></svg>
-      <div style="font-weight:bold; margin-bottom:4px;">Sürükle ve Bırak</div>
-      <div style="font-size:0.85rem; opacity:0.7;">veya bilgisayarınızdan seçmek için tıklayın</div>
+      <div style="font-weight:bold; margin-bottom:4px;" id="uploadDropText">Sürükle ve Bırak</div>
+      <div style="font-size:0.85rem; opacity:0.7;" id="uploadDropSubText">veya bilgisayarınızdan seçmek için tıklayın</div>
       <div style="font-size:0.75rem; opacity:0.5; margin-top:8px;">Sadece klasör yüklenebilir (Max 150MB)</div>
     </div>
+    <div id="selectedFolderInfo" style="display:none; text-align:center; margin-top:10px; color:var(--primary-golden); font-weight:bold;"></div>
     <div style="display:flex; gap:10px; margin-top:20px;">
       <button class="btn btn-ghost" style="flex:1;" onclick="closeModal('modalUploadFolder')">İptal</button>
+      <button class="btn btn-yellow" style="flex:1;" id="btnPerformUpload" onclick="performFolderUpload()" disabled>Yükle</button>
     </div>
   </div>
 </div>
@@ -542,7 +580,7 @@
         Klasör Yükle
       </button>
     </div>
-    <input type="file" id="packUploadInput" webkitdirectory directory multiple accept="image/*,video/mp4,video/webm" style="display:none;" onchange="handlePackFolderUpload(event)">
+    <input type="file" id="packUploadInput" webkitdirectory directory multiple accept="image/*,video/mp4,video/webm" style="display:none;" onchange="handleFolderSelected(event)">
     <input type="text" id="packSearchInput" class="purple-search-input" style="width:100%; margin-bottom:15px; text-transform:none; letter-spacing:1px; text-align:left !important;" data-i18n="searchPack" placeholder="Paket ara..." oninput="filterPacks()"/>
     
     <div class="pack-list-large" id="modalPackGrid" style="display:flex; flex-wrap:wrap; gap:12px; max-height:450px; overflow-y:auto; justify-content:center; padding-right:5px">

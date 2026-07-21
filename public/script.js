@@ -1339,7 +1339,8 @@ function renderRoundSummary(state, roundVoteTotals){
     const authorIsMe = (state.gameMode === 'meme_hunter' && sub.topic) ? (sub.topic.authorId === myId) : (sub.playerId === myId);
     
     const canDownload = (state.activePlayers || []).includes(myId);
-    const downloadBtnHtml = canDownload ? `<button class="btn btn-ghost" style="padding:6px 10px; font-size:.8rem;" onclick="downloadMeme('${sub.meme.url}', '${esc(sub.caption)}', ${JSON.stringify(sub.style).replace(/"/g, '&quot;')}, '${esc(sub.caption2 || '')}', ${JSON.stringify(sub.style2 || null).replace(/"/g, '&quot;')}, 'meme_${esc(sub.playerName)}.gif', '${esc(sub.caption3 || '')}', ${JSON.stringify(sub.style3 || null).replace(/"/g, '&quot;')})" title="${t('downloadBtn')}">${t('downloadBtn')}</button>` : '';
+    const s = (v) => JSON.stringify(v).replace(/"/g, '&quot;');
+    const downloadBtnHtml = canDownload ? `<button class="btn btn-ghost" style="padding:6px 10px; font-size:.8rem;" onclick="downloadMeme(${s(sub.meme.url)}, ${s(sub.caption)}, ${s(sub.style)}, ${s(sub.caption2 || '')}, ${s(sub.style2 || null)}, ${s('meme_' + sub.playerName + '.gif')}, ${s(sub.caption3 || '')}, ${s(sub.style3 || null)})" title="${t('downloadBtn')}">${t('downloadBtn')}</button>` : '';
     
     return `
       <div class="summary-meme-card" data-player-id="${sub.playerId}">
@@ -1900,9 +1901,16 @@ document.addEventListener('click', (e) => {
 });
 // --------------------
 
+window.selectedFolderFiles = null;
+
 window.openFolderUploadModal = function() {
   document.getElementById('uploadPackName').value = '';
   document.getElementById('modalUploadFolder').style.display = 'flex';
+  window.selectedFolderFiles = null;
+  const selInfo = document.getElementById('selectedFolderInfo');
+  if (selInfo) selInfo.style.display = 'none';
+  const btnUp = document.getElementById('btnPerformUpload');
+  if (btnUp) btnUp.disabled = true;
 };
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -1929,17 +1937,44 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-window.handlePackFolderUpload = async function(e) {
+window.handleFolderSelected = function(e) {
   const files = e.target.files;
+  if (!files || files.length === 0) return;
+  
+  window.selectedFolderFiles = files;
+  
+  const firstPath = files[0].webkitRelativePath || '';
+  const folderName = firstPath.split('/')[0] || 'YeniPaket';
+  
+  const packNameInput = document.getElementById('uploadPackName');
+  if (!packNameInput.value.trim()) {
+    packNameInput.value = folderName;
+  }
+  
+  const selInfo = document.getElementById('selectedFolderInfo');
+  if (selInfo) {
+    selInfo.innerText = window.myLang === 'tr' ? `Seçilen: ${folderName} (${files.length} dosya)` : `Selected: ${folderName} (${files.length} files)`;
+    selInfo.style.display = 'block';
+  }
+  
+  const btnUp = document.getElementById('btnPerformUpload');
+  if (btnUp) btnUp.disabled = false;
+};
+
+window.performFolderUpload = async function() {
+  const files = window.selectedFolderFiles;
   if (!files || files.length === 0) return;
 
   const rawName = document.getElementById('uploadPackName').value.trim();
   const firstPath = files[0].webkitRelativePath || '';
   const folderName = rawName || firstPath.split('/')[0] || 'YeniPaket';
   
+  const fileInput = document.getElementById('packUploadInput');
+
   if (availablePacks && availablePacks.some(p => p.id.toLowerCase() === folderName.toLowerCase())) {
     toast(window.myLang === 'tr' ? 'Bu isimde bir paket zaten var! Başka bir isim girin.' : 'Pack name already exists!');
-    e.target.value = '';
+    if (fileInput) fileInput.value = '';
+    window.selectedFolderFiles = null;
     return;
   }
   
@@ -1955,13 +1990,15 @@ window.handlePackFolderUpload = async function(e) {
 
   if (totalSize > 150 * 1024 * 1024) {
     toast(window.myLang === 'tr' ? 'Klasör boyutu çok büyük! En fazla 150 MB yükleyebilirsiniz.' : 'Folder size too large! Max 150 MB allowed.');
-    e.target.value = '';
+    if (fileInput) fileInput.value = '';
+    window.selectedFolderFiles = null;
     return;
   }
 
   if (validFiles.length === 0) {
     toast(window.myLang === 'tr' ? 'Klasörde uygun resim/video bulunamadı!' : 'No valid images/videos found in folder!');
-    e.target.value = '';
+    if (fileInput) fileInput.value = '';
+    window.selectedFolderFiles = null;
     return;
   }
 
@@ -1977,7 +2014,12 @@ window.handlePackFolderUpload = async function(e) {
       method: 'POST',
       body: formData
     });
-    const data = await res.json();
+    let data;
+    try {
+      data = await res.json();
+    } catch(e) {
+      throw new Error(`Sunucu beklenmeyen bir yanıt döndürdü (HTTP ${res.status}). Dosya boyutu limitini (genelde 1MB) Nginx/Sunucu ayarlarından yükseltmeniz gerekebilir.`);
+    }
     if (data.success) {
       toast(window.myLang === 'tr' ? 'Paket başarıyla yüklendi!' : 'Pack uploaded successfully!');
       setTimeout(() => {
@@ -1996,7 +2038,8 @@ window.handlePackFolderUpload = async function(e) {
     console.error(err);
     toast(window.myLang === 'tr' ? 'Yükleme hatası!' : 'Upload error!');
   }
-  e.target.value = '';
+  if (fileInput) fileInput.value = '';
+  window.selectedFolderFiles = null;
 };
 
 // --- KING LONG LIVE LOGIC ---

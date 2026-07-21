@@ -16,14 +16,23 @@ const io = new Server(server, { maxHttpBufferSize: 1e7 }); // 10MB limit
 
 // ── HTTP Rate Limiting ──
 const generalLimiter = rateLimit({
-  windowMs: 1 * 60 * 1000, // 1 dakika (Pencereyi daralt, limitleri artır)
-  max: 1000, // Limitini en az 1000'e çıkar
-  message: { error: "Sunucu meşgul, çok fazla istek." }
+  windowMs: 15 * 60 * 1000, // 15 dakika
+  max: 750, // 15 dakikada 750 istek
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Sunucu meşgul, çok fazla istek." },
+  skip: (req, res) => {
+    // Medya ve statik dosyaları atla
+    if (req.path.includes('/memes/') || req.path.includes('/uploads/') || /\.(jpg|jpeg|png|gif|webp|mp4|webm|css|js|html)$/i.test(req.path)) {
+      return true;
+    }
+    return false;
+  }
 });
 
 const apiLimiter = rateLimit({
-  windowMs: 60 * 1000, 
-  max: 5,              
+  windowMs: 15 * 60 * 1000, 
+  max: 750,              
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: "API istek limitine ulaştınız. Lütfen bekleyin." },
@@ -284,7 +293,18 @@ loadMemePacks();
 
 app.post('/api/download-video-meme', apiLimiter, (req, res) => {
   const { videoUrl, caption, style, caption2, style2, caption3, style3 } = req.body;
-  let inputPath = videoUrl.startsWith('http') ? videoUrl : path.join(PUBLIC_PATH, videoUrl.replace(/^\//, ''));
+  let parsedUrl = videoUrl;
+  try {
+    const u = new URL(videoUrl);
+    if (u.hostname.includes('girgirsamata.com') || u.hostname === 'localhost' || u.hostname === '127.0.0.1') {
+      parsedUrl = u.pathname;
+    }
+  } catch(e) {} // Not a full URL
+  
+  // URL decode if needed (e.g. %20 to space)
+  parsedUrl = decodeURIComponent(parsedUrl);
+  
+  let inputPath = parsedUrl.startsWith('http') ? parsedUrl : path.join(PUBLIC_PATH, parsedUrl.replace(/^\//, ''));
   const outputPath = path.join(UPLOAD_DIR, `render_${Date.now()}.mp4`);
   let filters = [];
   const fontPath = path.join(__dirname, 'fonts', 'impact.ttf').replace(/\\/g, '/');
