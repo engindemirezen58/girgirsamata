@@ -650,7 +650,10 @@ io.on("connection", (socket) => {
     const room = rooms[roomCode];
     if (!room) return socket.emit("error", { msg: "room_not_found" });
     if (room.state === "gameover") return socket.emit("error", { msg: "game_started" });
-    if (Object.keys(room.players).length >= room.maxPlayers) return socket.emit("error", { msg: "room_full" });
+    if (!room.streamerMode) {
+      const activeCount = Object.keys(room.players).filter(pid => !(room.viewers || []).includes(pid)).length;
+      if (activeCount >= room.maxPlayers) return socket.emit("error", { msg: "room_full" });
+    }
     if (room.password && room.password !== password) return socket.emit("error", { msg: "wrong_password" });
     if (room.bannedIps && room.bannedIps.includes(socket.handshake.address)) return socket.emit("error", { msg: "banned" });
     const nameTaken = Object.values(room.players).some(p => p.name.toLocaleLowerCase('tr-TR') === playerName.toLocaleLowerCase('tr-TR'));
@@ -690,8 +693,11 @@ io.on("connection", (socket) => {
     const srv = communityServers[serverId];
     if (!srv) return socket.emit("error", { msg: "room_not_found" });
     if (srv.state === "gameover") return socket.emit("error", { msg: "game_started" });
+    if (!srv.streamerMode) {
+      const activeCount = Object.keys(srv.players).filter(pid => !(srv.viewers || []).includes(pid)).length;
+      if (activeCount >= srv.maxPlayers) return socket.emit("error", { msg: "room_full" });
+    }
     if (srv.password && srv.password !== password) return socket.emit("error", { msg: "wrong_password" });
-    if (Object.keys(srv.players).length >= srv.maxPlayers) return socket.emit("error", { msg: "room_full" });
     if (srv.bannedIps && srv.bannedIps.includes(socket.handshake.address)) return socket.emit("error", { msg: "banned" });
     const nameTaken = Object.values(srv.players).some(p => p.name.toLocaleLowerCase('tr-TR') === playerName.toLocaleLowerCase('tr-TR'));
     if (nameTaken) return socket.emit("error", { msg: "name_taken" });
@@ -849,8 +855,13 @@ io.on("connection", (socket) => {
   socket.on("room:set_viewer_role", ({ roomCode, targetId, makeViewer }) => {
     const room = getRoom(roomCode); if (!room || room.host !== socket.id) return;
     if (!room.viewers) room.viewers = [];
-    if (makeViewer) { if (!room.viewers.includes(targetId)) room.viewers.push(targetId); }
-    else { room.viewers = room.viewers.filter(id => id !== targetId); }
+    if (makeViewer) { 
+      if (!room.viewers.includes(targetId)) room.viewers.push(targetId); 
+    } else { 
+      const activeCount = Object.keys(room.players).filter(pid => !room.viewers.includes(pid)).length;
+      if (activeCount >= room.maxPlayers) return socket.emit("error", { msg: "room_full" });
+      room.viewers = room.viewers.filter(id => id !== targetId); 
+    }
     io.to(roomCode || room.id).emit("room:streamer_update", { streamerMode: room.streamerMode, viewers: room.viewers });
     io.to(roomCode || room.id).emit("game:state", getRoomState(room));
   });
