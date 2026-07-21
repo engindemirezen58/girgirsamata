@@ -759,7 +759,7 @@ function renderLobby(state) {
         <div style="margin-bottom:4px;"><label style="display:block; font-size:0.75rem; color:var(--muted); font-weight:700; margin-bottom:2px;">${t('settingWriteLong')}</label><div class="range-row"><input type="range" id="ls_write" min="20" max="120" step="10" value="${s.writingTime}" oninput="document.getElementById('ls_write_v').textContent=this.value+'s';sendSettings()"/><span class="range-val" id="ls_write_v" style="font-size:0.75rem; color:var(--text);">${s.writingTime}s</span></div></div>
         <div style="margin-bottom:4px;"><label style="display:block; font-size:0.75rem; color:var(--muted); font-weight:700; margin-bottom:2px;">${t('settingVoteLong')}</label><div class="range-row"><input type="range" id="ls_vote" min="10" max="60" step="5" value="${s.votingTime}" oninput="document.getElementById('ls_vote_v').textContent=this.value+'s';sendSettings()"/><span class="range-val" id="ls_vote_v" style="font-size:0.75rem; color:var(--text);">${s.votingTime}s</span></div></div>
         <div style="margin-bottom:4px;"><label style="display:block; font-size:0.75rem; color:var(--muted); font-weight:700; margin-bottom:2px;">${t('settingChangeLong')}</label><div class="range-row"><input type="range" id="ls_change" min="0" max="30" value="${!s.changeAllowed?0:s.changeCount}" oninput="document.getElementById('ls_change_v').textContent=this.value=='0'?'${t('closed')}':this.value;sendSettings()"/><span class="range-val" id="ls_change_v" style="font-size:0.75rem; color:var(--text);">${!s.changeAllowed||s.changeCount==0?t('closed'):s.changeCount}</span></div></div>
-        <div style="margin-top:6px; margin-bottom:2px; padding:6px 10px; background:rgba(255,255,255,0.05); border-radius:8px; border:1px solid rgba(255,255,255,0.1);">
+        <div style="margin-top:6px; margin-bottom:2px; padding:6px 10px; background:rgba(255,255,255,0.05); border-radius:8px; border:1px solid rgba(255,255,255,0.1); display:${s.gameMode === 'king_long_live' ? 'none' : 'block'};">
           <label style="display:flex; justify-content:space-between; align-items:center; font-size:0.95rem; color:var(--text); font-weight:800; cursor:pointer;">
             <span>${myLang === 'tr' ? '\u{1F5D1}\uFE0F Çöp butonu' : '\u{1F5D1}\uFE0F Trash Button'}</span>
             <input type="checkbox" id="ls_trash" ${s.trashAllowed === false ? '' : 'checked'} onchange="document.getElementById('trash_info').style.display=this.checked?'block':'none'; sendSettings()" style="width:18px; height:18px; cursor:pointer; accent-color:var(--red);">
@@ -794,7 +794,7 @@ function renderLobby(state) {
         <div class="settings-cell"><div class="settings-cell-label">${t('settingWrite')}</div><div class="settings-cell-val">${s.writingTime}s</div></div>
         <div class="settings-cell"><div class="settings-cell-label">${t('settingVote')}</div><div class="settings-cell-val">${s.votingTime}s</div></div>
         <div class="settings-cell"><div class="settings-cell-label">${t('settingChange')}</div><div class="settings-cell-val">${s.changeAllowed?s.changeCount+'x':'—'}</div></div>
-        <div class="settings-cell"><div class="settings-cell-label">${myLang === 'tr' ? 'Çöp' : 'Trash'}</div><div class="settings-cell-val">${s.trashAllowed === false ? t('closed') : 'Açık'}</div></div>
+        ${s.gameMode === 'king_long_live' ? '' : `<div class="settings-cell"><div class="settings-cell-label">${myLang === 'tr' ? 'Çöp' : 'Trash'}</div><div class="settings-cell-val">${s.trashAllowed === false ? t('closed') : 'Açık'}</div></div>`}
       </div>`;
   }
 }
@@ -951,7 +951,7 @@ function renderWriting(state){
   document.getElementById('submitCountBadge').style.display='none';
   changeRemaining = state.changeCount || 1;
   const cb = document.getElementById('btnChange'); const cbBadge = document.getElementById('changeCountBadge');
-  if(state.changeAllowed && state.gameMode !== 'meme_hunter'){ cb.style.display=''; cb.disabled=false; cb.textContent=t('changeMemeBtn'); cbBadge.style.display=''; cbBadge.textContent=changeRemaining+' '+t('rightsLeft'); }
+  if(state.changeAllowed && state.gameMode !== 'meme_hunter' && state.gameMode !== 'custom_mode'){ cb.style.display=''; cb.disabled=false; cb.textContent=t('changeMemeBtn'); cbBadge.style.display=''; cbBadge.textContent=changeRemaining+' '+t('rightsLeft'); }
   else { cb.style.display='none'; cbBadge.style.display='none'; }
   // (Artık görselin silinmesine gerek yok, game:your_meme olayı doğrudan güncelliyor)
 }
@@ -1522,7 +1522,7 @@ socket.on('room_users_update', (players) => {
 
 socket.on('game:playerTrashExplosion', (trashedPlayers) => {
   const audio = new Audio('/sounds/explosion.mp3');
-  audio.volume = 0.25;
+  audio.volume = 0.08;
   audio.play().catch(e => console.warn('Audio play prevented', e));
 
   trashedPlayers.forEach(tp => {
@@ -1545,7 +1545,7 @@ socket.on('game:playerTrashExplosion', (trashedPlayers) => {
 
 socket.on('game:showcase_trashed', ({ penalty }) => {
   const audio = new Audio('https://www.myinstants.com/media/sounds/metal-pipe-clang.mp3');
-  audio.volume = 0.25;
+  audio.volume = 0.08;
   audio.play().catch(e => console.warn('Audio play prevented', e));
   
   const container = document.getElementById('showcaseContainer');
