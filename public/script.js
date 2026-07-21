@@ -2026,20 +2026,3 @@ function updateKingManualPickUI(players) {
 
 
 
-// Quick theme initialize to prevent FOUC
-  const savedTheme = localStorage.getItem('gs_theme') || 'dark';
-  document.documentElement.setAttribute('data-theme', savedTheme);
-  
-  function toggleTheme() {
-    const current = document.documentElement.getAttribute('data-theme') || 'dark';
-    const target = current === 'dark' ? 'light' : 'dark';
-    document.documentElement.setAttribute('data-theme', target);
-    localStorage.setItem('gs_theme', target);
-    const btn = document.getElementById('themeToggleBtn');
-    if (btn) btn.textContent = target === 'dark' ? '🌙' : '☀️';
-  }
-  
-  window.addEventListener('DOMContentLoaded', () => {
-    const btn = document.getElementById('themeToggleBtn');
-    if (btn) btn.textContent = localStorage.getItem('gs_theme') === 'light' ? '☀️' : '🌙';
-  });

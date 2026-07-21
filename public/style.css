@@ -45,47 +45,6 @@
   --glass-saturate: 220%;
 }
 
-/* Light Theme Variables */
-[data-theme="light"] {
-  --bg: #e4e9f3;
-  --sidebar-bg: #d6dbe7;
-  --surface: rgba(255, 255, 255, 0.65);
-  --card: rgba(0, 0, 0, 0.03);
-  --card-hover-bg: rgba(0, 0, 0, 0.06);
-  
-  --primary-coral: #ff4757;
-  --primary-golden: #ffa502;
-  --primary-sky: #1e90ff;
-  --primary-violet: #6c5ce7;
-  
-  --primary-teal: #01a3a4;
-  --primary-magenta: #d63031;
-  --primary-orange: #e15f41;
-  
-  --text: #1e272e;
-  --text-inverse: #ffffff;
-  --muted: #57606f;
-  
-  --neon-cyan: #1e90ff;
-  --neon-pink: #ff4757;
-  --neon-purple: #6c5ce7;
-  --red: #ea2027;
-  --green: #009432;
-  --yellow: #ffa502;
-  --like: #009432;
-  --dislike: #ea2027;
-  --neutral: #57606f;
-  --cyan: #1e90ff;
-  
-  --border: rgba(0, 0, 0, 0.08);
-  --border-hover: rgba(0, 0, 0, 0.18);
-  --glass-border: rgba(0, 0, 0, 0.12);
-  --glow-color: rgba(255, 71, 87, 0.1);
-  --shadow-color: rgba(31, 38, 135, 0.04);
-  --glass-blur: 20px;
-  --glass-saturate: 180%;
-}
-
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
