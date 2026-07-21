@@ -513,7 +513,7 @@ function showShowcaseResult(room, nsp) {
         tally[v]++;
       });
       const pointPerVote = 100 / (totalPlayers - 1);
-      const roundScore = Math.round(tally.like * pointPerVote);
+      const roundScore = Math.round((tally.like - tally.dislike) * pointPerVote);
       pts = roundScore;
       let penalty = 0;
       const trashVoters = room.trashVotes && room.trashVotes[sub.playerId] ? room.trashVotes[sub.playerId].length : 0;
