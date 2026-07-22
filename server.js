@@ -73,7 +73,7 @@ app.get('/memes/:pack/:file', (req, res, next) => {
     if (mimeTypes[ext]) {
       res.setHeader('Content-Type', mimeTypes[ext]);
     }
-    res.setHeader('Cache-Control', 'public, max-age=86400');
+    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
     res.sendFile(resolved);
   } catch (err) {
     console.error('Meme dosya sunucu hatası:', err.message);
@@ -82,18 +82,23 @@ app.get('/memes/:pack/:file', (req, res, next) => {
 });
 
 app.use(express.static(PUBLIC_PATH, {
-  setHeaders: (res, path) => {
-    if (path.endsWith('.html')) res.setHeader('Content-Type', 'text/html; charset=UTF-8');
-    else if (path.endsWith('.js')) res.setHeader('Content-Type', 'application/javascript; charset=UTF-8');
-    else if (path.endsWith('.css')) res.setHeader('Content-Type', 'text/css; charset=UTF-8');
-    else if (path.endsWith('.json')) res.setHeader('Content-Type', 'application/json; charset=UTF-8');
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.html')) res.setHeader('Content-Type', 'text/html; charset=UTF-8');
+    else if (filePath.endsWith('.js')) res.setHeader('Content-Type', 'application/javascript; charset=UTF-8');
+    else if (filePath.endsWith('.css')) res.setHeader('Content-Type', 'text/css; charset=UTF-8');
+    else if (filePath.endsWith('.json')) res.setHeader('Content-Type', 'application/json; charset=UTF-8');
+    
+    if (/\.(mp4|webm|mov|jpg|jpeg|png|gif|webp)$/i.test(filePath)) {
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    }
   }
 }));
 
-
 app.use(express.json({ limit: '150mb' }));
 app.use(express.urlencoded({ limit: '150mb', extended: true, parameterLimit: 100000 }));
-app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads'), {
+  setHeaders: (res) => res.setHeader('Cache-Control', 'public, max-age=31536000, immutable')
+}));
 
 // Sadece API rotalarına genel rate limit uygula
 app.use('/api/', generalLimiter);
