@@ -386,9 +386,12 @@ function assignMemesForRound(room) {
     if (room.gameMode === "custom_mode" && room.customMedia && room.customMedia[pid]) {
       assignment[pid] = room.customMedia[pid];
     } else {
-      const isVideoRegex = /\.(mp4|webm|mov)$/i;
-      const imagesOnly = packMemes.filter(m => !isVideoRegex.test(m.url));
-      const pool = imagesOnly.length > 0 ? imagesOnly : packMemes;
+      let pool = packMemes;
+      if (room.round === 1) {
+        const isVideoRegex = /\.(mp4|webm|mov)$/i;
+        const imagesOnly = pool.filter(m => !isVideoRegex.test(m.url));
+        if (imagesOnly.length > 0) pool = imagesOnly;
+      }
       const meme = getRandomMeme(pool, [...room.usedMemeIds, ...usedInRound]);
       assignment[pid] = meme; usedInRound.push(meme.id); room.usedMemeIds.push(meme.id);
     }
