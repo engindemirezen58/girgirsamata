@@ -32,7 +32,9 @@ function preloadMedia(url) {
     const v = document.createElement('video');
     v.preload = 'auto';
     v.muted = true;
+    v.autoplay = true;
     v.playsInline = true;
+    v.setAttribute('playsinline', '');
     v.style.display = 'none';
     v.src = url;
     document.body.appendChild(v);
@@ -1510,9 +1512,13 @@ socket.on('game:state', state => {
   gameState = state; updateSidebar(state);
   
   if (state.showcaseList && state.showcaseList.length > 0) {
-    state.showcaseList.forEach(item => {
-      if (item && item.meme && item.meme.url) preloadMedia(item.meme.url);
-    });
+    const sIndex = state.showcaseIndex || 0;
+    // Mobil veri tasarrufu: Sadece sıradaki 2-3 medyayı (veya mevcut medyayı) preload et
+    for (let i = sIndex; i <= sIndex + 2; i++) {
+      if (state.showcaseList[i] && state.showcaseList[i].meme && state.showcaseList[i].meme.url) {
+        preloadMedia(state.showcaseList[i].meme.url);
+      }
+    }
   }
   
   const amIViewer = (state.viewers || []).includes(myId);
