@@ -29,11 +29,15 @@ function preloadMedia(url) {
   preloadedMedia.add(url);
   const isVideo = /\.(mp4|webm|mov)$/i.test(url);
   if (isVideo) {
-    const link = document.createElement('link');
-    link.rel = 'preload';
-    link.as = 'video';
-    link.href = url;
-    document.head.appendChild(link);
+    const v = document.createElement('video');
+    v.preload = 'auto';
+    v.muted = true;
+    v.playsInline = true;
+    v.style.display = 'none';
+    v.src = url;
+    document.body.appendChild(v);
+    // Temizlik: 15 saniye sonra gizli video objesini sil (önbelleğe alındıktan sonra durmasına gerek yok)
+    setTimeout(() => { if(v.parentNode) v.remove(); }, 15000);
   } else {
     const img = new Image();
     img.src = url;
@@ -51,6 +55,42 @@ function renderMemeDOM(container, imgSrc, caption, style, caption2, style2, star
   container.style.width = '100%';
   container.style.background = 'var(--bg)';
   container.style.overflow = 'hidden';
+
+  const loader = document.createElement('div');
+  loader.className = 'media-loader';
+  loader.style.position = 'absolute';
+  loader.style.top = '50%';
+  loader.style.left = '50%';
+  loader.style.transform = 'translate(-50%, -50%)';
+  loader.style.width = '40px';
+  loader.style.height = '40px';
+  loader.style.border = '4px solid rgba(255,255,255,0.2)';
+  loader.style.borderTop = '4px solid var(--primary-golden, #ffcc00)';
+  loader.style.borderRadius = '50%';
+  loader.style.animation = 'spin 1s linear infinite';
+  loader.style.zIndex = '50';
+  if (!document.getElementById('spinStyle')) {
+    const styleElem = document.createElement('style');
+    styleElem.id = 'spinStyle';
+    styleElem.innerHTML = '@keyframes spin { 0% { transform: translate(-50%, -50%) rotate(0deg); } 100% { transform: translate(-50%, -50%) rotate(360deg); } }';
+    document.head.appendChild(styleElem);
+  }
+  container.appendChild(loader);
+
+  const contentWrapper = document.createElement('div');
+  contentWrapper.style.width = '100%';
+  contentWrapper.style.height = '100%';
+  contentWrapper.style.opacity = '0';
+  contentWrapper.style.transition = 'opacity 0.3s ease-in-out';
+  contentWrapper.style.position = 'absolute';
+  contentWrapper.style.top = '0';
+  contentWrapper.style.left = '0';
+  container.appendChild(contentWrapper);
+
+  const showContent = () => {
+    loader.style.display = 'none';
+    contentWrapper.style.opacity = '1';
+  };
   
   const isVideo = /\.(mp4|webm|mov)$/i.test(imgSrc) || (typeof imgSrc === 'string' && imgSrc.startsWith('data:video/'));
   let media;
@@ -63,11 +103,17 @@ function renderMemeDOM(container, imgSrc, caption, style, caption2, style2, star
     media.volume = 0.25;
     media.playsInline = true;
     media.setAttribute('playsinline', ''); 
+    media.preload = 'auto';
     media.style.width = '100%';
     media.style.height = '100%';
     media.style.objectFit = 'contain';
     media.style.display = 'block';
-    container.appendChild(media);
+
+    media.addEventListener('canplaythrough', showContent, { once: true });
+    media.addEventListener('error', showContent, { once: true });
+    if (media.readyState >= 3) showContent();
+
+    contentWrapper.appendChild(media);
 
     const controls = document.createElement('div');
     controls.style.position = 'absolute';
@@ -131,7 +177,7 @@ function renderMemeDOM(container, imgSrc, caption, style, caption2, style2, star
 
     controls.appendChild(playBtn);
     controls.appendChild(muteWrapper);
-    container.appendChild(controls);
+    contentWrapper.appendChild(controls);
     media.play().catch(() => {
       media.muted = true;
       muteBtn.innerHTML = ICON_MUTE;
@@ -149,6 +195,8 @@ function renderMemeDOM(container, imgSrc, caption, style, caption2, style2, star
     media.style.height = '100%';
     media.style.objectFit = 'contain';
     media.style.display = 'block';
+
+    media.onload = showContent;
     media.onerror = function() {
       console.error('Görsel yüklenemedi:', this.src);
       this.onerror = null;
@@ -156,12 +204,14 @@ function renderMemeDOM(container, imgSrc, caption, style, caption2, style2, star
       this.style.padding = '20%';
       this.style.opacity = '0.3';
       this.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#888"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>');
+      showContent();
     };
-    container.appendChild(media);
+    if (media.complete) showContent();
+
+    contentWrapper.appendChild(media);
   }
   container.style.containerType = 'inline-size';
 
-  
   const addTextDiv = (text, textStyle, defaultY) => {
     if (text && text.trim() && text !== '...') {
       const textDiv = document.createElement('div');
@@ -183,7 +233,7 @@ function renderMemeDOM(container, imgSrc, caption, style, caption2, style2, star
       const fs = (textStyle?.size || 3) * 2.5;
       textDiv.style.fontSize = fs + 'cqw';
       
-      container.appendChild(textDiv);
+      contentWrapper.appendChild(textDiv);
     }
   };
 
