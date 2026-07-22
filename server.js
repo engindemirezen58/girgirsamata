@@ -302,6 +302,28 @@ function loadMemePacks() {
 }
 loadMemePacks();
 
+let memeReloadTimer = null;
+try {
+  fs.watch(MEMES_DIR, { recursive: true }, (eventType, filename) => {
+    if (memeReloadTimer) clearTimeout(memeReloadTimer);
+    memeReloadTimer = setTimeout(() => {
+      console.log(`[Memes] Değişiklik algılandı (${filename || 'bilinmeyen dosya'}), yeniden yükleniyor...`);
+      loadMemePacks();
+      io.emit('server:packs_updated', { packs: Object.keys(memePacks).map(k => ({id: k, name: packDisplayNames[k] || k})), packPreviews });
+    }, 3000); // 3 saniye debounce (çoklu dosya yüklemelerinde çökmeyi önler)
+  });
+} catch(e) {
+  console.log('[Memes] Uyarı: fs.watch recursive desteklenmiyor olabilir, sadece ana klasör izlenecek.');
+  fs.watch(MEMES_DIR, (eventType, filename) => {
+    if (memeReloadTimer) clearTimeout(memeReloadTimer);
+    memeReloadTimer = setTimeout(() => {
+      console.log(`[Memes] Değişiklik algılandı (${filename || 'bilinmeyen dosya'}), yeniden yükleniyor...`);
+      loadMemePacks();
+      io.emit('server:packs_updated', { packs: Object.keys(memePacks).map(k => ({id: k, name: packDisplayNames[k] || k})), packPreviews });
+    }, 3000);
+  });
+}
+
 app.post('/api/download-video-meme', apiLimiter, (req, res) => {
   const { videoUrl, caption, style, caption2, style2, caption3, style3 } = req.body;
   let parsedUrl = videoUrl;

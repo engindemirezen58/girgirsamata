@@ -23,6 +23,23 @@ socket.on("system:all_memes", allMemes => {
   }
 });
 
+const preloadedMedia = new Set();
+function preloadMedia(url) {
+  if (!url || preloadedMedia.has(url)) return;
+  preloadedMedia.add(url);
+  const isVideo = /\.(mp4|webm|mov)$/i.test(url);
+  if (isVideo) {
+    const link = document.createElement('link');
+    link.rel = 'preload';
+    link.as = 'video';
+    link.href = url;
+    document.head.appendChild(link);
+  } else {
+    const img = new Image();
+    img.src = url;
+  }
+}
+
 function renderMemeDOM(container, imgSrc, caption, style, caption2, style2, startMuted = false, caption3, style3) {
   if (!container) return;
   container.querySelectorAll('video').forEach(v => {
@@ -1442,6 +1459,12 @@ socket.on('room:joined',({roomCode,playerId})=>{ myId=playerId; myRoomCode=roomC
 socket.on('game:state', state => {
   gameState = state; updateSidebar(state);
   
+  if (state.showcaseList && state.showcaseList.length > 0) {
+    state.showcaseList.forEach(item => {
+      if (item && item.meme && item.meme.url) preloadMedia(item.meme.url);
+    });
+  }
+  
   const amIViewer = (state.viewers || []).includes(myId);
   const streamerMode = state.streamerMode === true;
 
@@ -1618,6 +1641,12 @@ socket.on('game:your_meme',({meme,topic,remaining})=>{
 socket.on('game:your_meme_hand', ({memes, topic, remaining}) => {
   myMeme = memes[0]; // Varsayılan olarak ilkini seç
   window.selectedMemeForHunter = memes[0];
+  
+  if (memes && memes.length > 0) {
+    memes.forEach(m => {
+      if (m && m.url) preloadMedia(m.url);
+    });
+  }
   
   const topicBanner = document.getElementById('writingTopicBanner');
   if (topic) {
