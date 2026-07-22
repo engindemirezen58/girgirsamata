@@ -73,6 +73,7 @@ app.get('/memes/:pack/:file', (req, res, next) => {
     if (mimeTypes[ext]) {
       res.setHeader('Content-Type', mimeTypes[ext]);
     }
+    res.setHeader('Accept-Ranges', 'bytes');
     res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
     res.sendFile(resolved);
   } catch (err) {

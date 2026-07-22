@@ -125,10 +125,14 @@ function renderMemeDOM(container, imgSrc, caption, style, caption2, style2, star
       if (media.currentTime === 0) media.currentTime = 0.01;
     });
 
-    media.addEventListener('canplaythrough', showContent, { once: true });
+    media.addEventListener('canplay', () => {
+      showContent();
+      media.play().catch(e => console.log('Autoplay blocked (canplay):', e));
+    }, { once: true });
+    
     media.addEventListener('loadeddata', showContent, { once: true });
     media.addEventListener('error', showContent, { once: true });
-    if (media.readyState >= 3) showContent();
+    if (media.readyState >= 2) showContent();
 
     contentWrapper.appendChild(media);
 
