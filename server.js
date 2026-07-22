@@ -303,8 +303,9 @@ function loadMemePacks() {
 loadMemePacks();
 
 let memeReloadTimer = null;
+const MEMES_DIR_GLOBAL = path.join(PUBLIC_PATH, "memes");
 try {
-  fs.watch(MEMES_DIR, { recursive: true }, (eventType, filename) => {
+  fs.watch(MEMES_DIR_GLOBAL, { recursive: true }, (eventType, filename) => {
     if (memeReloadTimer) clearTimeout(memeReloadTimer);
     memeReloadTimer = setTimeout(() => {
       console.log(`[Memes] Değişiklik algılandı (${filename || 'bilinmeyen dosya'}), yeniden yükleniyor...`);
@@ -314,7 +315,7 @@ try {
   });
 } catch(e) {
   console.log('[Memes] Uyarı: fs.watch recursive desteklenmiyor olabilir, sadece ana klasör izlenecek.');
-  fs.watch(MEMES_DIR, (eventType, filename) => {
+  fs.watch(MEMES_DIR_GLOBAL, (eventType, filename) => {
     if (memeReloadTimer) clearTimeout(memeReloadTimer);
     memeReloadTimer = setTimeout(() => {
       console.log(`[Memes] Değişiklik algılandı (${filename || 'bilinmeyen dosya'}), yeniden yükleniyor...`);
