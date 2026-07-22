@@ -38,18 +38,24 @@ function preloadMedia(url) {
     v.style.display = 'none';
     v.src = url;
     document.body.appendChild(v);
-    // Temizlik: 15 saniye sonra gizli video objesini sil (önbelleğe alındıktan sonra durmasına gerek yok)
+    v.load(); // Ön yüklemeyi tetikle
     setTimeout(() => { if(v.parentNode) v.remove(); }, 15000);
   } else {
     const img = new Image();
     img.src = url;
+    // Resmi belleğe decode ettir
+    img.decode().catch(() => {});
   }
 }
 
 function renderMemeDOM(container, imgSrc, caption, style, caption2, style2, startMuted = false, caption3, style3) {
   if (!container) return;
-  container.querySelectorAll('video').forEach(v => {
-    try { v.pause(); v.removeAttribute('src'); v.load(); } catch(e) {}
+  // Meme değişiminde flicker olmaması için mevcut medyayı gizle ve sıfırla
+  container.querySelectorAll('video, img').forEach(el => {
+    el.style.opacity = '0';
+    el.style.display = 'none';
+    el.removeAttribute('src');
+    if (el.tagName === 'VIDEO') { try { el.pause(); el.load(); } catch(e){} }
   });
   container.innerHTML = '';
   container.style.position = 'relative';
@@ -89,7 +95,10 @@ function renderMemeDOM(container, imgSrc, caption, style, caption2, style2, star
   contentWrapper.style.left = '0';
   container.appendChild(contentWrapper);
 
+  let isShown = false;
   const showContent = () => {
+    if (isShown) return;
+    isShown = true;
     loader.style.display = 'none';
     contentWrapper.style.opacity = '1';
   };
@@ -111,7 +120,13 @@ function renderMemeDOM(container, imgSrc, caption, style, caption2, style2, star
     media.style.objectFit = 'contain';
     media.style.display = 'block';
 
+    // Videonun ilk karesini hemen render et (siyah ekranı önler)
+    media.addEventListener('loadedmetadata', () => {
+      if (media.currentTime === 0) media.currentTime = 0.01;
+    });
+
     media.addEventListener('canplaythrough', showContent, { once: true });
+    media.addEventListener('loadeddata', showContent, { once: true });
     media.addEventListener('error', showContent, { once: true });
     if (media.readyState >= 3) showContent();
 
