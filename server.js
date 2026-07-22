@@ -399,6 +399,9 @@ app.get("/admin/memes", (req, res) => res.json(memeLibrary));
 
 function getRandomMeme(poolMemes, usedIds = []) {
   const pool = poolMemes.filter(m => !usedIds.includes(m.id));
+  if (!pool.length && poolMemes.length && usedIds.length) {
+    usedIds.length = 0; // Clear the reference array in place
+  }
   const src = pool.length ? pool : poolMemes;
   if (!src.length) return { id: "error", url: "", name: "Hata: Meme Yok" };
   return src[Math.floor(Math.random() * src.length)];
@@ -421,7 +424,14 @@ function assignMemesForRound(room) {
         const imagesOnly = pool.filter(m => !isVideoRegex.test(m.url));
         if (imagesOnly.length > 0) pool = imagesOnly;
       }
-      const meme = getRandomMeme(pool, [...room.usedMemeIds, ...usedInRound]);
+      let combinedUsed = [...room.usedMemeIds, ...usedInRound];
+      let available = pool.filter(m => !combinedUsed.includes(m.id));
+      if (!available.length && pool.length) {
+        room.usedMemeIds.length = 0;
+        usedInRound.length = 0;
+        combinedUsed = [];
+      }
+      const meme = getRandomMeme(pool, combinedUsed);
       assignment[pid] = meme; usedInRound.push(meme.id); room.usedMemeIds.push(meme.id);
     }
   });
@@ -442,9 +452,16 @@ function assignMemeHandsForRound(room, count = 5) {
       if (i === 0) {
         const isVideoRegex = /\.(mp4|webm|mov)$/i;
         available = pool.filter(m => !room.usedMemeIds.includes(m.id) && !isVideoRegex.test(m.url));
-        if (available.length === 0) available = pool.filter(m => !isVideoRegex.test(m.url));
+        if (available.length === 0) {
+          room.usedMemeIds.length = 0;
+          available = pool.filter(m => !isVideoRegex.test(m.url));
+        }
       } else {
         available = pool.filter(m => !room.usedMemeIds.includes(m.id));
+        if (available.length === 0) {
+          room.usedMemeIds.length = 0;
+          available = pool;
+        }
       }
       const src = available.length ? available : pool;
       if (!src.length) { hand.push({ id: "error", url: "", name: "Hata: Meme Yok" }); continue; }
@@ -861,7 +878,9 @@ io.on("connection", (socket) => {
     if (room.gameMode === "meme_hunter") {
       const packMemes = memePacks[selectedPackName]; let pool = [...packMemes]; let hand = [];
       for(let i = 0; i < 5; i++) {
-        const available = pool.filter(m => !room.usedMemeIds.includes(m.id)); const src = available.length ? available : pool;
+        let available = pool.filter(m => !room.usedMemeIds.includes(m.id));
+        if (!available.length && pool.length) { room.usedMemeIds.length = 0; available = pool; }
+        const src = available.length ? available : pool;
         if (!src.length) { hand.push({ id: "error", url: "", name: "Hata: Meme Yok" }); continue; }
         const rIdx = Math.floor(Math.random() * src.length); const m = src[rIdx]; hand.push(m);
         room.usedMemeIds.push(m.id); pool = pool.filter(x => x.id !== m.id);
