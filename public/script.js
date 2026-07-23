@@ -26,6 +26,7 @@ socket.on("system:all_memes", allMemes => {
 });
 
 const imageCache = {};
+const videoCache = {};
 const preloadedMedia = new Set();
 
 function preloadMemeImage(url) {
@@ -36,22 +37,27 @@ function preloadMemeImage(url) {
   img.decode().catch(() => {});
 }
 
+function preloadMemeVideo(url) {
+  if (!url || videoCache[url]) return;
+  const v = document.createElement('video');
+  v.preload = 'auto';
+  v.muted = true;
+  v.autoplay = true;
+  v.playsInline = true;
+  v.setAttribute('playsinline', '');
+  v.style.display = 'none';
+  v.src = url;
+  videoCache[url] = v;
+  document.body.appendChild(v);
+  v.load(); // Yüklemeyi tetikle ve bellekte tut
+}
+
 function preloadMedia(url) {
   if (!url || preloadedMedia.has(url)) return;
   preloadedMedia.add(url);
   const isVideo = /\.(mp4|webm|mov)$/i.test(url);
   if (isVideo) {
-    const v = document.createElement('video');
-    v.preload = 'auto';
-    v.muted = true;
-    v.autoplay = true;
-    v.playsInline = true;
-    v.setAttribute('playsinline', '');
-    v.style.display = 'none';
-    v.src = url;
-    document.body.appendChild(v);
-    v.load(); // Ön yüklemeyi tetikle
-    setTimeout(() => { if(v.parentNode) v.remove(); }, 15000);
+    preloadMemeVideo(url);
   } else {
     preloadMemeImage(url);
   }
@@ -364,38 +370,76 @@ function renderWritingMedia(imgSrc, onDone) {
   const isVideo = /\.(mp4|webm|mov)$/i.test(imgSrc) || (typeof imgSrc === 'string' && imgSrc.startsWith('data:video/'));
 
   if (isVideo) {
-    vidEl.pause();
-    imgEl.style.display = 'none';
-    vidEl.style.display = 'block';
-    controls.style.display = 'flex';
-    vidEl.src = imgSrc + (imgSrc.includes('#') ? '' : '#t=0.1');
-    vidEl.muted = false;
-    vidEl.volume = 0.25;
-    muteBtn.innerHTML = ICON_VOL;
-    if(volSlider) { volSlider.value = 0.25; volSlider.style.display = 'inline-block'; }
-    
-    playBtn.innerHTML = ICON_PAUSE;
-    
-    const handleLoaded = () => {
-      if (onDone) { onDone(); onDone = null; }
-    };
+    vidEl.dataset.pendingSrc = imgSrc;
+    const nextSrc = imgSrc + (imgSrc.includes('#') ? '' : '#t=0.1');
 
-    if (vidEl.readyState >= 2) {
-      handleLoaded();
-    } else {
-      vidEl.onloadeddata = handleLoaded;
+    let preloader = videoCache[imgSrc];
+    if (!preloader) {
+      preloader = document.createElement('video');
+      preloader.preload = 'auto';
+      preloader.muted = true;
+      preloader.src = nextSrc;
+      videoCache[imgSrc] = preloader;
+      preloader.load();
     }
 
-    vidEl.play().catch(e => {
-      console.warn('Unmuted autoplay prevented:', e);
-      vidEl.muted = true;
-      muteBtn.innerHTML = ICON_MUTE;
-      if(volSlider) { volSlider.value = 0; volSlider.style.display = 'none'; }
-      vidEl.play().catch(e2 => {
-        console.warn('Muted autoplay also prevented:', e2);
-        playBtn.innerHTML = ICON_PLAY;
-      });
-    });
+    const prepareAndPlayDOMVideo = () => {
+      if (vidEl.dataset.pendingSrc !== imgSrc) return;
+      
+      vidEl.src = nextSrc;
+      vidEl.muted = false;
+      vidEl.volume = 0.25;
+      vidEl.setAttribute('playsinline', '');
+      vidEl.setAttribute('preload', 'auto');
+      vidEl.autoplay = true;
+      vidEl.style.backgroundColor = 'transparent';
+
+      muteBtn.innerHTML = ICON_VOL;
+      if(volSlider) { volSlider.value = 0.25; volSlider.style.display = 'inline-block'; }
+      playBtn.innerHTML = ICON_PAUSE;
+
+      const revealVideo = () => {
+        if (vidEl.dataset.pendingSrc !== imgSrc) return;
+        imgEl.style.display = 'none';
+        vidEl.style.display = 'block';
+        controls.style.display = 'flex';
+        if (onDone) { onDone(); onDone = null; }
+      };
+
+      const attemptPlay = () => {
+        if (vidEl.dataset.pendingSrc !== imgSrc) return;
+        vidEl.play().then(() => {
+          revealVideo();
+        }).catch(e => {
+          console.warn('Unmuted autoplay prevented:', e);
+          vidEl.muted = true;
+          muteBtn.innerHTML = ICON_MUTE;
+          if(volSlider) { volSlider.value = 0; volSlider.style.display = 'none'; }
+          vidEl.play().then(() => {
+            revealVideo();
+          }).catch(e2 => {
+            console.warn('Muted autoplay also prevented:', e2);
+            playBtn.innerHTML = ICON_PLAY;
+            revealVideo();
+          });
+        });
+      };
+
+      if (vidEl.readyState >= 2) {
+        attemptPlay();
+      } else {
+        vidEl.onloadeddata = () => attemptPlay();
+        vidEl.onerror = () => attemptPlay();
+      }
+    };
+
+    if (preloader.readyState >= 3) {
+      prepareAndPlayDOMVideo();
+    } else {
+      preloader.oncanplaythrough = prepareAndPlayDOMVideo;
+      preloader.onloadeddata = prepareAndPlayDOMVideo;
+      preloader.onerror = prepareAndPlayDOMVideo;
+    }
     
     playBtn.onclick = (e) => {
       e.stopPropagation();
