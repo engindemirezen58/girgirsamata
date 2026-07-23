@@ -25,7 +25,17 @@ socket.on("system:all_memes", allMemes => {
   }
 });
 
+const imageCache = {};
 const preloadedMedia = new Set();
+
+function preloadMemeImage(url) {
+  if (!url || imageCache[url]) return;
+  const img = new Image();
+  img.src = url;
+  imageCache[url] = img;
+  img.decode().catch(() => {});
+}
+
 function preloadMedia(url) {
   if (!url || preloadedMedia.has(url)) return;
   preloadedMedia.add(url);
@@ -43,10 +53,7 @@ function preloadMedia(url) {
     v.load(); // Ön yüklemeyi tetikle
     setTimeout(() => { if(v.parentNode) v.remove(); }, 15000);
   } else {
-    const img = new Image();
-    img.src = url;
-    // Resmi belleğe decode ettir
-    img.decode().catch(() => {});
+    preloadMemeImage(url);
   }
 }
 
@@ -1754,9 +1761,9 @@ socket.on('game:your_meme_hand', ({memes, topic, remaining}) => {
   window.selectedMemeForHunter = memes[0];
   
   if (memes && memes.length > 0) {
-    memes.forEach(m => {
-      if (m && m.url) preloadMedia(m.url);
-    });
+    // Sıralı Ön Yükleme (Queue Preloading): 1. ve 2. indexleri (2. ve 3. meme) ön yükle
+    if (memes[1] && memes[1].url) preloadMedia(memes[1].url);
+    if (memes[2] && memes[2].url) preloadMedia(memes[2].url);
   }
   
   const topicBanner = document.getElementById('writingTopicBanner');
@@ -1807,6 +1814,10 @@ socket.on('game:your_meme_hand', ({memes, topic, remaining}) => {
           renderWritingMedia(m.url);
           const drag = document.getElementById('captionDrag'); 
           if (drag) drag.textContent = (topic && topic.text) ? topic.text.toLocaleUpperCase('tr-TR') : (topic ? topic.toLocaleUpperCase('tr-TR') : '');
+          
+          // Sıralı Ön Yükleme (Queue Preloading): currentIndex + 2'yi yükle
+          const nextIndex = idx + 2;
+          if (memes[nextIndex] && memes[nextIndex].url) preloadMedia(memes[nextIndex].url);
         };
         container.appendChild(el);
       } else {
@@ -1822,6 +1833,10 @@ socket.on('game:your_meme_hand', ({memes, topic, remaining}) => {
           renderWritingMedia(m.url);
           const drag = document.getElementById('captionDrag'); 
           if (drag) drag.textContent = (topic && topic.text) ? topic.text.toLocaleUpperCase('tr-TR') : (topic ? topic.toLocaleUpperCase('tr-TR') : '');
+
+          // Sıralı Ön Yükleme (Queue Preloading): currentIndex + 2'yi yükle
+          const nextIndex = idx + 2;
+          if (memes[nextIndex] && memes[nextIndex].url) preloadMedia(memes[nextIndex].url);
         };
         container.appendChild(el);
       }
