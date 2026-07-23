@@ -3,7 +3,9 @@ const ICON_PAUSE = `<svg width="24" height="24" viewBox="0 0 24 24" fill="curren
 const ICON_VOL = `<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>`;
 const ICON_MUTE = `<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>`;
 
-const socket = io();
+const socket = io({
+  transports: ['websocket', 'polling']
+});
 let myId = null, myRoomCode = null, myLang = localStorage.getItem('mw_lang')||'tr';
 window.myLang = myLang;
 let gameState = null, myMeme = null, changeRemaining = 0;
@@ -419,16 +421,24 @@ function renderWritingMedia(imgSrc, onDone) {
     controls.style.display = 'none';
     vidEl.pause();
     vidEl.src = '';
-    imgEl.style.display = 'block';
+    // Preload image to prevent black screen and flickering
+    imgEl.dataset.pendingSrc = imgSrc;
+    const preloader = new Image();
     
     const handleLoaded = () => {
+      // Prevent race condition if another image was requested while this one was loading
+      if (imgEl.dataset.pendingSrc !== imgSrc) return;
+      
+      imgEl.src = preloader.src;
+      imgEl.style.display = 'block';
       if (onDone) { onDone(); onDone = null; }
     };
-    imgEl.onload = handleLoaded;
-    imgEl.onerror = handleLoaded; // Proceed even if error, to avoid stuck state
-    imgEl.src = imgSrc;
+
+    preloader.onload = handleLoaded;
+    preloader.onerror = handleLoaded; // Proceed even if error, to avoid stuck state
+    preloader.src = imgSrc;
     
-    if (imgEl.complete) {
+    if (preloader.complete) {
       handleLoaded();
     }
   }
@@ -1086,8 +1096,21 @@ function processMediaFile(file) {
     } else {
       document.getElementById('previewVideo').style.display = 'none';
       const img = document.getElementById('previewImg');
-      img.style.display = 'block';
-      img.src = dataUrl;
+      
+      img.dataset.pendingSrc = dataUrl;
+      const preloader = new Image();
+      preloader.onload = () => {
+        if (img.dataset.pendingSrc === dataUrl) {
+          img.src = preloader.src;
+          img.style.display = 'block';
+        }
+      };
+      preloader.onerror = preloader.onload;
+      preloader.src = dataUrl;
+      
+      if (preloader.complete) {
+        preloader.onload();
+      }
     }
   };
   reader.readAsDataURL(file);
@@ -1177,8 +1200,21 @@ window.selectArchiveMeme = function(id) {
     } else {
       document.getElementById('previewVideo').style.display = 'none';
       const img = document.getElementById('previewImg');
-      img.style.display = 'block';
-      img.src = selectedMeme.url;
+      
+      img.dataset.pendingSrc = selectedMeme.url;
+      const preloader = new Image();
+      preloader.onload = () => {
+        if (img.dataset.pendingSrc === selectedMeme.url) {
+          img.src = preloader.src;
+          img.style.display = 'block';
+        }
+      };
+      preloader.onerror = preloader.onload; // fallback to setting it anyway or ignore
+      preloader.src = selectedMeme.url;
+      
+      if (preloader.complete) {
+        preloader.onload();
+      }
     }
   }
   closeModal('modalMemeSelect');

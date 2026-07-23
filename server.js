@@ -16,7 +16,14 @@ const rateLimit = require("express-rate-limit");
 const app = express();
 app.set('trust proxy', 1); // Get real IP behind Cloudflare/Nginx
 const server = http.createServer(app);
-const io = new Server(server, { maxHttpBufferSize: 1e7 }); // 10MB limit
+const io = new Server(server, { 
+  maxHttpBufferSize: 1e7, // 10MB limit
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"]
+  },
+  transports: ['websocket', 'polling']
+});
 
 // ── HTTP Rate Limiting ──
 const generalLimiter = rateLimit({
