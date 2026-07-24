@@ -80,6 +80,7 @@ app.get('/memes/:pack/:file', (req, res, next) => {
     if (mimeTypes[ext]) {
       res.setHeader('Content-Type', mimeTypes[ext]);
     }
+    res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Accept-Ranges', 'bytes');
     res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
     res.sendFile(resolved);
@@ -95,7 +96,7 @@ app.use(express.static(PUBLIC_PATH, {
     else if (filePath.endsWith('.js')) res.setHeader('Content-Type', 'application/javascript; charset=UTF-8');
     else if (filePath.endsWith('.css')) res.setHeader('Content-Type', 'text/css; charset=UTF-8');
     else if (filePath.endsWith('.json')) res.setHeader('Content-Type', 'application/json; charset=UTF-8');
-    
+    res.setHeader('Access-Control-Allow-Origin', '*');
     if (/\.(mp4|webm|mov|jpg|jpeg|png|gif|webp)$/i.test(filePath)) {
       res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
     }

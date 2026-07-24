@@ -359,6 +359,20 @@ function renderCaption(ctx, w, h, text) {
   });
 }
 
+function cleanupMemeHand() {
+  const container = document.getElementById('memeHandContainer');
+  if (!container) return;
+  container.querySelectorAll('img, video').forEach(el => {
+    if (el.tagName === 'VIDEO') {
+      el.pause();
+      el.removeAttribute('src');
+      el.load();
+    }
+    el.src = '';
+    el.removeAttribute('src');
+  });
+}
+
 function renderWritingMedia(imgSrc, onDone) {
   const imgEl = document.getElementById('memeImg');
   const vidEl = document.getElementById('memeVideo');
@@ -473,6 +487,7 @@ function renderWritingMedia(imgSrc, onDone) {
     controls.style.display = 'none';
     vidEl.pause();
     vidEl.src = '';
+    const tsUrl = imgSrc + (imgSrc.includes('?') ? '&' : '?') + 'v=' + Date.now();
     imgEl.dataset.pendingSrc = imgSrc;
     imgEl.style.display = 'block';
     
@@ -483,7 +498,7 @@ function renderWritingMedia(imgSrc, onDone) {
     
     imgEl.onload = handleLoaded;
     imgEl.onerror = handleLoaded;
-    imgEl.src = imgSrc;
+    imgEl.src = tsUrl;
     
     if (imgEl.complete) {
       handleLoaded();
@@ -1814,6 +1829,7 @@ socket.on('game:your_meme_hand', ({memes, topic, remaining}) => {
 
   const container = document.getElementById('memeHandContainer');
   if (container) {
+    cleanupMemeHand();
     container.style.display = 'flex';
     container.innerHTML = '';
     memes.forEach((m, idx) => {
@@ -1827,6 +1843,8 @@ socket.on('game:your_meme_hand', ({memes, topic, remaining}) => {
         el.style.objectFit = 'cover';
         el.muted = true;
         el.playsInline = true;
+        el.setAttribute('muted', '');
+        el.setAttribute('playsinline', '');
         el.preload = 'metadata';
         el.src = m.url + (m.url.includes('#') ? '' : '#t=0.1');
         
@@ -1848,7 +1866,7 @@ socket.on('game:your_meme_hand', ({memes, topic, remaining}) => {
         // Resim için: normal img
         const el = document.createElement('img');
         el.className = 'meme-hand-item' + (idx === 0 ? ' active' : '');
-        el.src = m.url;
+        el.src = m.url + (m.url.includes('?') ? '&' : '?') + 'v=' + Date.now();
         el.onclick = () => {
           container.querySelectorAll('.meme-hand-item').forEach(c => c.classList.remove('active'));
           el.classList.add('active');
