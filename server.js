@@ -452,28 +452,29 @@ function assignMemeHandsForRound(room, count = 5) {
   const selectedPackName = room.memePack && memePacks[room.memePack] ? room.memePack : Object.keys(memePacks)[0];
   const packMemes = memePacks[selectedPackName];
   
+  if (!room.memeDeck) room.memeDeck = [...packMemes].sort(() => Math.random() - 0.5);
+  
   pids.forEach(pid => {
-    let hand = []; let pool = [...packMemes];
+    let hand = [];
     for(let i = 0; i < count; i++) {
-      let available;
+      if (room.memeDeck.length === 0) {
+        room.memeDeck = [...packMemes].sort(() => Math.random() - 0.5);
+      }
+      
+      let m;
       if (i === 0) {
         const isVideoRegex = /\.(mp4|webm|mov)$/i;
-        available = pool.filter(m => !room.usedMemeIds.includes(m.id) && !isVideoRegex.test(m.url));
-        if (available.length === 0) {
-          room.usedMemeIds.length = 0;
-          available = pool.filter(m => !isVideoRegex.test(m.url));
+        const imgIndex = room.memeDeck.findIndex(meme => !isVideoRegex.test(meme.url));
+        if (imgIndex !== -1) {
+          m = room.memeDeck[imgIndex];
+          room.memeDeck.splice(imgIndex, 1);
+        } else {
+          m = room.memeDeck.shift();
         }
       } else {
-        available = pool.filter(m => !room.usedMemeIds.includes(m.id));
-        if (available.length === 0) {
-          room.usedMemeIds.length = 0;
-          available = pool;
-        }
+        m = room.memeDeck.shift();
       }
-      const src = available.length ? available : pool;
-      if (!src.length) { hand.push({ id: "error", url: "", name: "Hata: Meme Yok" }); continue; }
-      const rIdx = Math.floor(Math.random() * src.length); const m = src[rIdx];
-      hand.push(m); room.usedMemeIds.push(m.id); pool = pool.filter(x => x.id !== m.id);
+      hand.push(m);
     }
     assignment[pid] = hand;
   });
@@ -883,14 +884,11 @@ io.on("connection", (socket) => {
     room.changes[socket.id] = used + 1; const remaining = room.changeCount - room.changes[socket.id];
     const selectedPackName = room.memePack && memePacks[room.memePack] ? room.memePack : Object.keys(memePacks)[0];
     if (room.gameMode === "meme_hunter") {
-      const packMemes = memePacks[selectedPackName]; let pool = [...packMemes]; let hand = [];
+      const packMemes = memePacks[selectedPackName]; let hand = [];
+      if (!room.memeDeck) room.memeDeck = [...packMemes].sort(() => Math.random() - 0.5);
       for(let i = 0; i < 5; i++) {
-        let available = pool.filter(m => !room.usedMemeIds.includes(m.id));
-        if (!available.length && pool.length) { room.usedMemeIds.length = 0; available = pool; }
-        const src = available.length ? available : pool;
-        if (!src.length) { hand.push({ id: "error", url: "", name: "Hata: Meme Yok" }); continue; }
-        const rIdx = Math.floor(Math.random() * src.length); const m = src[rIdx]; hand.push(m);
-        room.usedMemeIds.push(m.id); pool = pool.filter(x => x.id !== m.id);
+        if (room.memeDeck.length === 0) room.memeDeck = [...packMemes].sort(() => Math.random() - 0.5);
+        hand.push(room.memeDeck.shift());
       }
       room.hands[socket.id] = hand; socket.emit("game:your_meme_hand", { memes: hand, remaining, topic: room.assignedTopics ? room.assignedTopics[socket.id] : null });
     } else {

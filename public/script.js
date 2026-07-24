@@ -473,24 +473,19 @@ function renderWritingMedia(imgSrc, onDone) {
     controls.style.display = 'none';
     vidEl.pause();
     vidEl.src = '';
-    // Preload image to prevent black screen and flickering
     imgEl.dataset.pendingSrc = imgSrc;
-    const preloader = new Image();
+    imgEl.style.display = 'block';
     
     const handleLoaded = () => {
-      // Prevent race condition if another image was requested while this one was loading
       if (imgEl.dataset.pendingSrc !== imgSrc) return;
-      
-      imgEl.src = imgSrc;
-      imgEl.style.display = 'block';
       if (onDone) { onDone(); onDone = null; }
     };
-
-    preloader.onload = handleLoaded;
-    preloader.onerror = handleLoaded; // Proceed even if error, to avoid stuck state
-    preloader.src = imgSrc;
     
-    if (preloader.complete) {
+    imgEl.onload = handleLoaded;
+    imgEl.onerror = handleLoaded;
+    imgEl.src = imgSrc;
+    
+    if (imgEl.complete) {
       handleLoaded();
     }
   }
@@ -1825,31 +1820,15 @@ socket.on('game:your_meme_hand', ({memes, topic, remaining}) => {
       const isVideo = /\.(mp4|webm|mov)$/i.test(m.url) || (typeof m.url === 'string' && m.url.startsWith('data:video/'));
       
       if (isVideo) {
-        // Video için: canvas ile ilk kareyi çıkar, img olarak göster
-        const el = document.createElement('img');
+        // Video için: doğrudan video elementini kullan (ilk kareyi göstermesi için #t=0.1)
+        const el = document.createElement('video');
         el.className = 'meme-hand-item' + (idx === 0 ? ' active' : '');
         el.style.background = '#222';
-        
-        // Gizli video ile ilk kareyi çek
-        const tempVid = document.createElement('video');
-        tempVid.muted = true;
-        tempVid.playsInline = true;
-        tempVid.preload = 'auto';
-        tempVid.src = m.url;
-        tempVid.addEventListener('loadeddata', () => {
-          tempVid.currentTime = 0.1;
-        }, {once: true});
-        tempVid.addEventListener('seeked', () => {
-          try {
-            const cvs = document.createElement('canvas');
-            cvs.width = tempVid.videoWidth || 320;
-            cvs.height = tempVid.videoHeight || 240;
-            cvs.getContext('2d').drawImage(tempVid, 0, 0, cvs.width, cvs.height);
-            el.src = cvs.toDataURL('image/jpeg', 0.8);
-          } catch(e) { /* tarayıcı izin vermezse boş kalır */ }
-          tempVid.src = '';
-          tempVid.load();
-        }, {once: true});
+        el.style.objectFit = 'cover';
+        el.muted = true;
+        el.playsInline = true;
+        el.preload = 'metadata';
+        el.src = m.url + (m.url.includes('#') ? '' : '#t=0.1');
         
         el.onclick = () => {
           container.querySelectorAll('.meme-hand-item').forEach(c => c.classList.remove('active'));
