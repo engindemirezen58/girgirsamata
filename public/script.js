@@ -385,8 +385,9 @@ function renderWritingMedia(imgSrc, onDone) {
 
     const prepareAndPlayDOMVideo = () => {
       if (vidEl.dataset.pendingSrc !== imgSrc) return;
-      
+      vidEl.pause();
       vidEl.src = nextSrc;
+      vidEl.load();
       vidEl.muted = false;
       vidEl.volume = 0.25;
       vidEl.setAttribute('playsinline', '');
@@ -446,8 +447,8 @@ function renderWritingMedia(imgSrc, onDone) {
       if (vidEl.paused) vidEl.play();
       else vidEl.pause();
     };
-    vidEl.addEventListener('play', () => { playBtn.innerHTML = ICON_PAUSE; });
-    vidEl.addEventListener('pause', () => { playBtn.innerHTML = ICON_PLAY; });
+    vidEl.onplay = () => { playBtn.innerHTML = ICON_PAUSE; };
+    vidEl.onpause = () => { playBtn.innerHTML = ICON_PLAY; };
     muteBtn.onclick = (e) => {
       e.stopPropagation();
       if(volSlider) volSlider.style.display = volSlider.style.display === 'none' ? 'block' : 'none';
