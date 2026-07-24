@@ -480,7 +480,7 @@ function renderWritingMedia(imgSrc, onDone) {
       // Prevent race condition if another image was requested while this one was loading
       if (imgEl.dataset.pendingSrc !== imgSrc) return;
       
-      imgEl.src = preloader.src;
+      imgEl.src = imgSrc;
       imgEl.style.display = 'block';
       if (onDone) { onDone(); onDone = null; }
     };
@@ -1152,7 +1152,7 @@ function processMediaFile(file) {
       const preloader = new Image();
       preloader.onload = () => {
         if (img.dataset.pendingSrc === dataUrl) {
-          img.src = preloader.src;
+          img.src = dataUrl;
           img.style.display = 'block';
         }
       };
@@ -1256,7 +1256,7 @@ window.selectArchiveMeme = function(id) {
       const preloader = new Image();
       preloader.onload = () => {
         if (img.dataset.pendingSrc === selectedMeme.url) {
-          img.src = preloader.src;
+          img.src = selectedMeme.url;
           img.style.display = 'block';
         }
       };
