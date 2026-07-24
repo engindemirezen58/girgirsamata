@@ -528,8 +528,24 @@ function assignTopicsAndStartWriting(room, nsp) {
   while (submittedTopics.length < pids.length) {
     submittedTopics.push({ text: fallbacks[Math.floor(Math.random() * fallbacks.length)], authorId: "system", authorName: "Sistem" });
   }
-  submittedTopics.sort(() => Math.random() - 0.5);
-  pids.forEach((pid, i) => { room.assignedTopics[pid] = submittedTopics[i]; });
+  
+  // Derangement algorithm to ensure no player gets their own submitted topic
+  let valid = false;
+  let attempts = 0;
+  let shuffled = [];
+  while (!valid && attempts < 100) {
+    shuffled = [...submittedTopics].sort(() => Math.random() - 0.5);
+    valid = true;
+    for (let i = 0; i < pids.length; i++) {
+      if (shuffled[i].authorId === pids[i]) {
+        valid = false;
+        break;
+      }
+    }
+    attempts++;
+  }
+  
+  pids.forEach((pid, i) => { room.assignedTopics[pid] = shuffled[i]; });
   startWritingPhase(room, nsp);
 }
 
