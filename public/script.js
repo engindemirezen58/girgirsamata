@@ -374,12 +374,38 @@ function cleanupMemeHand() {
 }
 
 function renderWritingMedia(imgSrc, onDone) {
-  const imgEl = document.getElementById('memeImg');
-  const vidEl = document.getElementById('memeVideo');
+  let oldImg = document.getElementById('memeImg');
+  let oldVid = document.getElementById('memeVideo');
   const controls = document.getElementById('writingVideoControls');
   const playBtn = document.getElementById('wBtnPlay');
   const muteBtn = document.getElementById('wBtnMute');
   const volSlider = document.getElementById('wVolSlider');
+
+  if (oldVid) { oldVid.pause(); oldVid.removeAttribute('src'); oldVid.load(); }
+  if (oldImg) { oldImg.removeAttribute('src'); }
+
+  const imgEl = document.createElement('img');
+  imgEl.id = 'memeImg';
+  imgEl.style.width = '100%';
+  imgEl.style.aspectRatio = '4/3';
+  imgEl.style.objectFit = 'contain';
+  imgEl.style.background = 'var(--bg)';
+  imgEl.style.display = 'none';
+  if (oldImg) oldImg.parentNode.replaceChild(imgEl, oldImg);
+
+  const vidEl = document.createElement('video');
+  vidEl.id = 'memeVideo';
+  vidEl.style.width = '100%';
+  vidEl.style.aspectRatio = '4/3';
+  vidEl.style.objectFit = 'contain';
+  vidEl.style.background = 'var(--bg)';
+  vidEl.style.display = 'none';
+  vidEl.autoplay = true;
+  vidEl.loop = true;
+  vidEl.muted = true;
+  vidEl.playsInline = true;
+  vidEl.setAttribute('playsinline', '');
+  if (oldVid) oldVid.parentNode.replaceChild(vidEl, oldVid);
 
   const isVideo = /\.(mp4|webm|mov)$/i.test(imgSrc) || (typeof imgSrc === 'string' && imgSrc.startsWith('data:video/'));
 
@@ -483,11 +509,7 @@ function renderWritingMedia(imgSrc, onDone) {
       };
     }
   } else {
-    vidEl.style.display = 'none';
     controls.style.display = 'none';
-    vidEl.pause();
-    vidEl.src = '';
-    const tsUrl = imgSrc + (imgSrc.includes('?') ? '&' : '?') + 'v=' + Date.now();
     imgEl.dataset.pendingSrc = imgSrc;
     imgEl.style.display = 'block';
     
@@ -498,7 +520,7 @@ function renderWritingMedia(imgSrc, onDone) {
     
     imgEl.onload = handleLoaded;
     imgEl.onerror = handleLoaded;
-    imgEl.src = tsUrl;
+    imgEl.src = imgSrc;
     
     if (imgEl.complete) {
       handleLoaded();
